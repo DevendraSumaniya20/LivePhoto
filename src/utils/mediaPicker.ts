@@ -5,12 +5,24 @@ import ImagePicker, {
 
 export type PickedMedia = {
   path: string;
+  localIdentifier?: string;
+  sourceURL?: string;
   width: number;
   height: number;
   mime?: string;
   size?: number;
   filename?: string | null;
   exif?: Record<string, unknown> | null;
+  duration?: number;
+  data?: string;
+  cropRect?: {
+    width: number;
+    height: number;
+    x: number;
+    y: number;
+  };
+  creationDate?: string;
+  modificationDate?: string;
 };
 
 const baseOptions: Options = {
@@ -24,12 +36,19 @@ const baseOptions: Options = {
 
 const mapToPicked = (media: ImageOrVideo): PickedMedia => ({
   path: media.path,
+  localIdentifier: (media as any).localIdentifier,
+  sourceURL: (media as any).sourceURL,
   width: media.width ?? 0,
   height: media.height ?? 0,
   mime: media.mime,
   size: media.size,
   filename: media.filename ?? null,
   exif: (media as any).exif ?? null,
+  duration: (media as any).duration,
+  data: (media as any).data,
+  cropRect: (media as any).cropRect,
+  creationDate: (media as any).creationDate,
+  modificationDate: (media as any).modificationDate,
 });
 
 export const pickFromGallery = async (): Promise<PickedMedia | null> => {

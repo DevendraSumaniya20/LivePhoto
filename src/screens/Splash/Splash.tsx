@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '../../constants/color';
 import { moderateScale } from '../../constants/responsive';
 import { useNavigation } from '@react-navigation/native';
@@ -26,14 +27,12 @@ const Splash = () => {
   }, [navigation]);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.title}>LivePhoto</Text>
       <ActivityIndicator size="large" color={Colors.white} />
-    </View>
+    </SafeAreaView>
   );
 };
-
-export default Splash;
 
 const styles = StyleSheet.create({
   container: {
@@ -50,3 +49,5 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 });
+
+export default Splash;
