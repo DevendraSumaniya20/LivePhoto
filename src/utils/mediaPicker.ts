@@ -3,6 +3,9 @@ import ImagePicker, {
   Options,
 } from 'react-native-image-crop-picker';
 
+/**
+ * Media picked from gallery or camera
+ */
 export type PickedMedia = {
   path: string;
   localIdentifier?: string;
@@ -13,7 +16,7 @@ export type PickedMedia = {
   size?: number;
   filename?: string | null;
   exif?: Record<string, unknown> | null;
-  duration?: number;
+  duration?: number; // videos only
   data?: string;
   cropRect?: {
     width: number;
@@ -30,10 +33,16 @@ const baseOptions: Options = {
   includeBase64: false,
   includeExif: true,
   compressImageQuality: 0.9,
-  mediaType: 'photo',
+  mediaType: 'any', // ✅ allows both photo + video
   forceJpg: false,
 };
 
+// --- Type guard to detect video ---
+export const isVideo = (mime?: string): boolean => {
+  return typeof mime === 'string' && mime.startsWith('video/');
+};
+
+// --- Map raw picker result to our type ---
 const mapToPicked = (media: ImageOrVideo): PickedMedia => ({
   path: media.path,
   localIdentifier: (media as any).localIdentifier,
@@ -51,6 +60,7 @@ const mapToPicked = (media: ImageOrVideo): PickedMedia => ({
   modificationDate: (media as any).modificationDate,
 });
 
+// --- Gallery picker ---
 export const pickFromGallery = async (): Promise<PickedMedia | null> => {
   try {
     const media = await ImagePicker.openPicker({
@@ -58,18 +68,17 @@ export const pickFromGallery = async (): Promise<PickedMedia | null> => {
       multiple: false,
     });
     return mapToPicked(media);
-  } catch (e) {
+  } catch {
     return null;
   }
 };
 
+// --- Camera picker ---
 export const pickFromCamera = async (): Promise<PickedMedia | null> => {
   try {
-    const media = await ImagePicker.openCamera({
-      ...baseOptions,
-    });
+    const media = await ImagePicker.openCamera(baseOptions);
     return mapToPicked(media);
-  } catch (e) {
+  } catch {
     return null;
   }
 };

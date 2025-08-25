@@ -49,11 +49,17 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+
+	<!-- Permissions -->
 	<key>NSCameraUsageDescription</key>
-	<string>This app requires camera access to take photos.</string>
+	<string>This app needs camera access to take photos and capture videos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app requires photo library access to select photos.</string>
+	<string>This app needs photo library access to select photos and videos.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>This app saves photos to your library when needed.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access for recording audio and videos.</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>This app needs access to media library for audio playback</string>
 </dict>
 </plist>
