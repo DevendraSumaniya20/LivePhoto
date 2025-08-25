@@ -31,6 +31,7 @@ import {
 } from '../../utils/permissions';
 
 const { AudioExtractor } = NativeModules;
+import Share from 'react-native-share';
 
 interface ExtractedAudio {
   path: string;
@@ -79,32 +80,6 @@ const Home = (): ReactElement => {
     resetAudioStates();
   };
 
-  const requestStoragePermission = async (): Promise<boolean> => {
-    if (Platform.OS === 'ios') return true;
-
-    try {
-      if (Platform.Version >= 33) {
-        // Android 13+ uses scoped storage
-        return true;
-      } else {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          {
-            title: 'Storage Permission',
-            message: 'App needs access to storage to save audio files',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          },
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      }
-    } catch (err) {
-      console.warn(err);
-      return false;
-    }
-  };
-
   const handlePickGallery = async (): Promise<void> => {
     const perm = await requestPhotoLibraryPermission();
     if (!perm.granted)
@@ -143,95 +118,100 @@ const Home = (): ReactElement => {
   };
 
   const handleExtractAudio = async (): Promise<void> => {
+    console.log('handleExtractAudio called');
     if (!media || !isVideo(media.mime)) {
+      console.warn('Invalid Media selected:', media);
       return Alert.alert(
         'Invalid Media',
         'Please select a video to extract audio.',
       );
     }
 
+    console.log('Media is valid:', media);
+
     setIsExtracting(true);
     try {
-      const result = await AudioExtractor.extractAudio(media.path);
-      if (!result?.path)
+      // Remove file:// prefix
+      const filePath = media.path.replace('file://', '');
+      console.log('Using file path for extraction:', filePath);
+
+      // Optional: copy to safe temp path
+      // const safePath = `${RNFS.TemporaryDirectoryPath}/${media.filename}`;
+      // console.log('Copying file to safe path:', safePath);
+      // await RNFS.copyFile(filePath, safePath);
+
+      const result = await AudioExtractor.extractAudio(filePath);
+      console.log('Audio extraction result:', result);
+
+      if (!result?.path) {
+        console.warn('No audio track found in the video');
         return Alert.alert('Extraction Failed', 'No audio track found.');
+      }
 
       setExtractedAudio({
         ...result,
         format: result.format || 'm4a',
         sampleRate: result.sampleRate || 44100,
       });
+      console.log('Extracted audio stored in state:', result);
 
       await loadAudio(result.path);
+      console.log('Audio loaded successfully:', result.path);
+
       Alert.alert('Success', 'Audio extracted and ready to play!');
     } catch (err: any) {
-      console.error(err);
+      console.error('Error during audio extraction:', err);
       Alert.alert('Error', err?.message || 'Failed to extract audio');
     } finally {
       setIsExtracting(false);
+      console.log('Extraction finished, isExtracting set to false');
     }
   };
 
   const handleSaveAudio = async (): Promise<void> => {
     if (!extractedAudio) return;
 
-    const hasPermission = await requestStoragePermission();
-    if (!hasPermission) {
-      return Alert.alert(
-        'Permission Required',
-        'Storage permission is required to save audio files.',
-      );
-    }
-
     setIsSaving(true);
+
     try {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const fileName = `extracted_audio_${timestamp}.m4a`;
-
-      let destinationPath: string;
+      // Remove file:// prefix if present
+      const path = extractedAudio.path.replace('file://', '');
 
       if (Platform.OS === 'ios') {
-        // For iOS, save to Documents directory which is accessible via Files app
-        destinationPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+        // Use share sheet on iOS
+        await Share.open({
+          url: `file://${path}`,
+          type: 'audio/m4a',
+          filename: `extracted_audio_${Date.now()}.m4a`,
+        });
+
+        Alert.alert('Success', 'Audio ready to save or share!');
       } else {
-        // For Android, save to Downloads folder
-        destinationPath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+        // Android: save directly to Downloads folder
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const fileName = `extracted_audio_${timestamp}.m4a`;
+        const destinationPath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+
+        await RNFS.copyFile(path, destinationPath);
+
+        Alert.alert(
+          'Success',
+          `Audio saved successfully!\nLocation: Downloads folder`,
+          [{ text: 'OK' }],
+        );
       }
-
-      // Copy the extracted audio to the destination
-      await RNFS.copyFile(extractedAudio.path, destinationPath);
-
-      // For iOS, also try to save to external documents for better accessibility
-      if (Platform.OS === 'ios') {
-        try {
-          const externalPath = `${RNFS.ExternalDirectoryPath}/${fileName}`;
-          await RNFS.copyFile(extractedAudio.path, externalPath);
-        } catch (e) {
-          // External directory might not be available, that's okay
-          console.log('External directory not available:', e);
-        }
-      }
-
-      Alert.alert(
-        'Success',
-        `Audio saved successfully!\nLocation: ${
-          Platform.OS === 'ios'
-            ? 'Files app > On My iPhone > LivePhoto'
-            : 'Downloads folder'
-        }`,
-        [{ text: 'OK' }],
-      );
     } catch (err: any) {
-      console.error('Save error:', err);
-      Alert.alert(
-        'Error',
-        `Failed to save audio: ${err.message || 'Unknown error'}`,
-      );
+      if (err?.message !== 'User did not share') {
+        console.error('Save error:', err);
+        Alert.alert(
+          'Error',
+          `Failed to save audio: ${err.message || 'Unknown'}`,
+        );
+      }
     } finally {
       setIsSaving(false);
     }
   };
-
   const handlePlayPause = (): void => {
     if (!soundRef.current || !audioLoaded) return;
     if (isPlaying) {

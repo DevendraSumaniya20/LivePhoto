@@ -1,14 +1,23 @@
+//
+//  AudioExtractorModule.swift
+//  LivePhoto
+//
+//  Created by BIRAJTECH on 25/08/25.
+//
+
 import Foundation
 import AVFoundation
+import React
 
 @objc(AudioExtractor)
 class AudioExtractor: NSObject {
 
   @objc(extractAudio:withResolver:withRejecter:)
-  func extractAudio(videoPath: String,
-                    resolve: @escaping RCTPromiseResolveBlock,
-                    reject: @escaping RCTPromiseRejectBlock) {
-    
+  func extractAudio(
+    videoPath: String,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
     // Validate input path
     guard !videoPath.isEmpty else {
       reject("invalid_path", "Video path is empty", nil)
@@ -32,7 +41,7 @@ class AudioExtractor: NSObject {
       return
     }
 
-    // Create output file path in Documents directory
+    // Create output file path
     let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
     let timestamp = Int(Date().timeIntervalSince1970)
     let outputFileName = "extracted_audio_\(timestamp).m4a"
@@ -44,7 +53,8 @@ class AudioExtractor: NSObject {
       do {
         try FileManager.default.removeItem(at: outputURL)
       } catch {
-        print("Warning: Could not remove existing file: \(error)")
+        reject("cleanup_error", "Could not remove existing file: \(error.localizedDescription)", error)
+        return
       }
     }
 
@@ -56,74 +66,56 @@ class AudioExtractor: NSObject {
 
     exportSession.outputURL = outputURL
     exportSession.outputFileType = .m4a
-    
-    // Only export audio
     exportSession.shouldOptimizeForNetworkUse = true
-    
+
     // Start extraction
     exportSession.exportAsynchronously {
-      DispatchQueue.main.async {
-        switch exportSession.status {
-        case .completed:
-          // Verify the output file was created
-          guard FileManager.default.fileExists(atPath: outputPath) else {
-            reject("file_not_created", "Audio file was not created", nil)
-            return
-          }
-          
-          do {
-            // Get file attributes
-            let fileAttributes = try FileManager.default.attributesOfItem(atPath: outputPath)
-            let fileSize = (fileAttributes[.size] as? NSNumber)?.doubleValue ?? 0
-            
-            // Get audio duration
-            let outputAsset = AVAsset(url: outputURL)
-            let duration = CMTimeGetSeconds(outputAsset.duration)
-            
-            // Get audio format info
-            var sampleRate: Double = 44100 // Default
-            var format = "m4a"
-            
-            if let audioTrack = outputAsset.tracks(withMediaType: .audio).first {
-              if let formatDescription = audioTrack.formatDescriptions.first {
-                let basicDescription = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription as! CMAudioFormatDescription)
-                if let basicDesc = basicDescription {
-                  sampleRate = basicDesc.pointee.mSampleRate
-                }
-              }
-            }
-            
-            // Build result matching Android structure
-            let result: [String: Any] = [
-              "path": outputPath,
-              "size": Int(fileSize),
-              "duration": duration.isFinite ? duration : 0,
-              "format": format,
-              "sampleRate": Int(sampleRate)
-            ]
-            
-            print("Audio extraction successful: \(result)")
-            resolve(result)
-            
-          } catch {
-            reject("file_info_error", "Could not read file information: \(error.localizedDescription)", error)
-          }
-          
-        case .failed:
-          let errorMessage = exportSession.error?.localizedDescription ?? "Unknown export error"
-          print("Export failed: \(errorMessage)")
-          reject("export_failed", "Audio extraction failed: \(errorMessage)", exportSession.error)
-          
-        case .cancelled:
-          reject("export_cancelled", "Audio extraction was cancelled", nil)
-          
-        default:
-          reject("export_unknown", "Unknown export status: \(exportSession.status.rawValue)", nil)
+      switch exportSession.status {
+      case .completed:
+        guard FileManager.default.fileExists(atPath: outputPath) else {
+          reject("file_not_created", "Audio file was not created", nil)
+          return
         }
+
+        do {
+          let fileAttributes = try FileManager.default.attributesOfItem(atPath: outputPath)
+          let fileSize = (fileAttributes[.size] as? NSNumber)?.doubleValue ?? 0
+          let outputAsset = AVAsset(url: outputURL)
+          let duration = CMTimeGetSeconds(outputAsset.duration)
+          var sampleRate: Double = 44100
+          let format = "m4a"
+
+          if let audioTrack = outputAsset.tracks(withMediaType: .audio).first,
+             let formatDescription = audioTrack.formatDescriptions.first {
+            if let basicDescription = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription as! CMAudioFormatDescription) {
+              sampleRate = basicDescription.pointee.mSampleRate
+            }
+          }
+
+          let result: [String: Any] = [
+            "path": outputPath,
+            "size": Int(fileSize),
+            "duration": duration.isFinite ? duration : 0,
+            "format": format,
+            "sampleRate": Int(sampleRate)
+          ]
+
+          resolve(result)
+
+        } catch {
+          reject("file_info_error", "Could not read file information: \(error.localizedDescription)", error)
+        }
+
+      case .failed:
+        reject("export_failed", "Audio extraction failed: \(exportSession.error?.localizedDescription ?? "Unknown error")", exportSession.error)
+      case .cancelled:
+        reject("export_cancelled", "Audio extraction was cancelled", nil)
+      default:
+        reject("export_unknown", "Unknown export status: \(exportSession.status.rawValue)", nil)
       }
     }
   }
-  
+
   @objc
   static func requiresMainQueueSetup() -> Bool {
     return false

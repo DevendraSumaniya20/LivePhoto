@@ -8,23 +8,28 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		431ADBFF391A808FE742AF8E /* libPods-LivePhoto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E466B6AA02139159F6995D8 /* libPods-LivePhoto.a */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		E4C220952E5C837300C861E9 /* AudioExtractorModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C220942E5C837300C861E9 /* AudioExtractorModule.swift */; };
+		E4C220982E5C83AF00C861E9 /* AudioExtractor.m in Sources */ = {isa = PBXBuildFile; fileRef = E4C220972E5C83AF00C861E9 /* AudioExtractor.m */; };
 		F55DEBF6E285149446B97B29 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		FFDC6B81D9D5C44B149872B3 /* libPods-LivePhoto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F18FDE554303A28063507A5 /* libPods-LivePhoto.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0056AECF8C15C97477AC51FE /* Pods-LivePhoto.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LivePhoto.debug.xcconfig"; path = "Target Support Files/Pods-LivePhoto/Pods-LivePhoto.debug.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* LivePhoto.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LivePhoto.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = LivePhoto/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = LivePhoto/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = LivePhoto/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		714A05EFB126C87CE28EC27F /* Pods-LivePhoto.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LivePhoto.release.xcconfig"; path = "Target Support Files/Pods-LivePhoto/Pods-LivePhoto.release.xcconfig"; sourceTree = "<group>"; };
+		329FE473A8E22B485B0B7EB0 /* Pods-LivePhoto.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LivePhoto.debug.xcconfig"; path = "Target Support Files/Pods-LivePhoto/Pods-LivePhoto.debug.xcconfig"; sourceTree = "<group>"; };
+		5F18FDE554303A28063507A5 /* libPods-LivePhoto.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-LivePhoto.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = LivePhoto/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = LivePhoto/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		9E466B6AA02139159F6995D8 /* libPods-LivePhoto.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-LivePhoto.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E4C220942E5C837300C861E9 /* AudioExtractorModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioExtractorModule.swift; sourceTree = "<group>"; };
+		E4C220962E5C83AF00C861E9 /* LivePhoto-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LivePhoto-Bridging-Header.h"; sourceTree = "<group>"; };
+		E4C220972E5C83AF00C861E9 /* AudioExtractor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AudioExtractor.m; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		FEFB191FA19DAEC62BABC691 /* Pods-LivePhoto.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LivePhoto.release.xcconfig"; path = "Target Support Files/Pods-LivePhoto/Pods-LivePhoto.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				431ADBFF391A808FE742AF8E /* libPods-LivePhoto.a in Frameworks */,
+				FFDC6B81D9D5C44B149872B3 /* libPods-LivePhoto.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -55,7 +60,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				9E466B6AA02139159F6995D8 /* libPods-LivePhoto.a */,
+				5F18FDE554303A28063507A5 /* libPods-LivePhoto.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -70,6 +75,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				E4C220912E5C830900C861E9 /* AudioExtractor */,
 				13B07FAE1A68108700A75B9A /* LivePhoto */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
@@ -92,10 +98,20 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				0056AECF8C15C97477AC51FE /* Pods-LivePhoto.debug.xcconfig */,
-				714A05EFB126C87CE28EC27F /* Pods-LivePhoto.release.xcconfig */,
+				329FE473A8E22B485B0B7EB0 /* Pods-LivePhoto.debug.xcconfig */,
+				FEFB191FA19DAEC62BABC691 /* Pods-LivePhoto.release.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		E4C220912E5C830900C861E9 /* AudioExtractor */ = {
+			isa = PBXGroup;
+			children = (
+				E4C220942E5C837300C861E9 /* AudioExtractorModule.swift */,
+				E4C220972E5C83AF00C861E9 /* AudioExtractor.m */,
+				E4C220962E5C83AF00C861E9 /* LivePhoto-Bridging-Header.h */,
+			);
+			path = AudioExtractor;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -105,13 +121,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "LivePhoto" */;
 			buildPhases = (
-				BF2299099C3730440B99ED63 /* [CP] Check Pods Manifest.lock */,
+				490C31060953C232B45F55AF /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				23C446B2D7B534529A50558F /* [CP] Embed Pods Frameworks */,
-				67BBA42850A89C934228405C /* [CP] Copy Pods Resources */,
+				F2B7B3A3E85D2125BA4B7CEF /* [CP] Embed Pods Frameworks */,
+				F008C8D98E520B3381DB470A /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -131,7 +147,7 @@
 				LastUpgradeCheck = 1210;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
-						LastSwiftMigration = 1120;
+						LastSwiftMigration = 1640;
 					};
 				};
 			};
@@ -183,41 +199,7 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		23C446B2D7B534529A50558F /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		67BBA42850A89C934228405C /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		BF2299099C3730440B99ED63 /* [CP] Check Pods Manifest.lock */ = {
+		490C31060953C232B45F55AF /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -239,6 +221,40 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		F008C8D98E520B3381DB470A /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		F2B7B3A3E85D2125BA4B7CEF /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -246,7 +262,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E4C220982E5C83AF00C861E9 /* AudioExtractor.m in Sources */,
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
+				E4C220952E5C837300C861E9 /* AudioExtractorModule.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -255,7 +273,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0056AECF8C15C97477AC51FE /* Pods-LivePhoto.debug.xcconfig */;
+			baseConfigurationReference = 329FE473A8E22B485B0B7EB0 /* Pods-LivePhoto.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -275,6 +293,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = LivePhoto;
+				SWIFT_OBJC_BRIDGING_HEADER = "AudioExtractor/LivePhoto-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -283,7 +302,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 714A05EFB126C87CE28EC27F /* Pods-LivePhoto.release.xcconfig */;
+			baseConfigurationReference = FEFB191FA19DAEC62BABC691 /* Pods-LivePhoto.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -302,6 +321,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = LivePhoto;
+				SWIFT_OBJC_BRIDGING_HEADER = "AudioExtractor/LivePhoto-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};

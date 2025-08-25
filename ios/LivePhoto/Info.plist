@@ -61,5 +61,18 @@
 	<string>This app needs microphone access for recording audio and videos.</string>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>This app needs access to media library for audio playback</string>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+  <array>
+    <string>whatsapp</string>
+    <string>mailto</string>
+    <string>instagram</string>
+    <string>instagram-stories</string>
+    <string>fb</string>
+    <string>facebook-stories</string>
+  </array>
 </dict>
 </plist>
