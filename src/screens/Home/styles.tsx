@@ -1,123 +1,176 @@
 import { StyleSheet } from 'react-native';
-import Colors from '../../constants/color';
 import { moderateScale } from '../../constants/responsive';
+import Colors from '../../constants/color';
 
 const styles = StyleSheet.create({
+  // Safe area & scroll
   safeArea: {
     flex: 1,
     backgroundColor: Colors.black,
   },
-  container: {
+  scrollContainer: {
     flex: 1,
-    backgroundColor: Colors.black,
   },
+  scrollContent: {
+    paddingHorizontal: moderateScale(20),
+    paddingBottom: moderateScale(50),
+  },
+
+  // Header
   header: {
-    paddingHorizontal: moderateScale(24),
-    paddingVertical: moderateScale(20),
-    alignItems: 'center',
+    marginBottom: moderateScale(20),
   },
   headerTitle: {
-    fontSize: moderateScale(32),
-    fontWeight: '900',
     color: Colors.white,
-    letterSpacing: 1.5,
-    marginBottom: moderateScale(8),
+    fontSize: moderateScale(28),
+    fontWeight: 'bold',
+    marginBottom: moderateScale(5),
   },
   headerSubtitle: {
-    fontSize: moderateScale(16),
     color: Colors.white,
-    opacity: 0.7,
-    fontWeight: '400',
+    fontSize: moderateScale(16),
   },
+
+  // Action buttons container
   actionContainer: {
     flexDirection: 'row',
-    paddingHorizontal: moderateScale(20),
-    marginBottom: moderateScale(20),
-    gap: moderateScale(16),
-  },
-
-  // Extract Audio Button
-  extractButton: {
-    marginHorizontal: moderateScale(20),
-    marginBottom: moderateScale(16),
-    padding: moderateScale(16),
-    backgroundColor: Colors.primary || '#4A90E2',
-    borderRadius: moderateScale(12),
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    alignItems: 'center',
-  },
-  extractButtonDisabled: {
-    backgroundColor: 'rgba(74, 144, 226, 0.5)',
-  },
-  extractButtonText: {
-    color: Colors.white,
-    fontWeight: '700',
-    fontSize: moderateScale(16),
-  },
-
-  scrollView: {
-    flex: 1,
-  },
-  detailsWrap: {
-    paddingHorizontal: moderateScale(20),
-    paddingBottom: moderateScale(30),
-  },
-
-  previewCard: {
-    backgroundColor: Colors.white,
-    borderRadius: moderateScale(20),
-    padding: moderateScale(20),
-    marginBottom: moderateScale(16),
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-  previewHeader: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: moderateScale(16),
+    marginBottom: moderateScale(20),
+    gap: moderateScale(10),
   },
-  previewTitle: {
-    fontSize: moderateScale(20),
-    fontWeight: '700',
-    color: Colors.black,
-  },
-  clearBtn: {
-    width: moderateScale(32),
-    height: moderateScale(32),
-    borderRadius: moderateScale(16),
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  clearBtnText: {
-    color: Colors.black,
-    fontSize: moderateScale(16),
-    fontWeight: '600',
-  },
-  imageContainer: {
-    borderRadius: moderateScale(16),
-    overflow: 'hidden',
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+
+  // Media preview
+  mediaDetailsContainer: {
+    marginBottom: moderateScale(20),
   },
   preview: {
     width: '100%',
-    height: moderateScale(300),
+    height: moderateScale(200),
+    borderRadius: moderateScale(12),
+    backgroundColor: Colors.black50,
   },
 
-  cardTitle: {
-    fontSize: moderateScale(18),
-    fontWeight: '700',
-    color: Colors.black,
-    marginBottom: moderateScale(16),
+  // Audio extraction buttons
+  extractButtonContainer: {
+    marginBottom: moderateScale(15),
+  },
+  extractButton: {
+    backgroundColor: Colors.black,
+    paddingVertical: moderateScale(12),
+    borderRadius: moderateScale(12),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  extractButtonDisabled: {
+    backgroundColor: Colors.white60,
+  },
+  extractButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  extractButtonIcon: {
+    fontSize: moderateScale(20),
+    marginRight: moderateScale(8),
+  },
+  extractButtonText: {
+    color: Colors.white,
+    fontWeight: 'bold',
+    fontSize: moderateScale(16),
+  },
+
+  // Audio Player
+  audioPlayerContainer: {
+    marginBottom: moderateScale(20),
+  },
+  audioTitle: {
+    color: Colors.white,
+    fontWeight: 'bold',
+    marginBottom: moderateScale(5),
+  },
+
+  // Live Photo container
+  livePhotoContainer: {
+    marginTop: moderateScale(20),
+    padding: moderateScale(15),
+    backgroundColor: Colors.black50,
+    borderRadius: moderateScale(12),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  livePhotoLabel: {
+    color: Colors.white,
+    fontWeight: 'bold',
+    marginBottom: moderateScale(5),
+  },
+  livePhotoText: {
+    color: Colors.white,
+    marginBottom: moderateScale(10),
     textAlign: 'center',
+  },
+  livePhotoImage: {
+    width: moderateScale(200),
+    height: moderateScale(200),
+    marginBottom: moderateScale(10),
+    borderRadius: moderateScale(12),
+  },
+  livePhotoVideo: {
+    width: moderateScale(300),
+    height: moderateScale(200),
+    borderRadius: moderateScale(12),
+  },
+
+  // Loading overlay
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: Colors.black80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  loadingText: {
+    color: Colors.white,
+    fontSize: moderateScale(16),
+    fontWeight: 'bold',
+  },
+
+  // Bottom spacing
+  bottomSpacing: {
+    height: moderateScale(30),
+  },
+
+  compatibilityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginTop: 8,
+    alignSelf: 'center',
+  },
+
+  compatibilityIcon: {
+    fontSize: 16,
+    marginRight: 6,
+  },
+
+  compatibilityText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  // If ActionButton component needs disabled state styling
+  actionButtonDisabled: {
+    opacity: 0.5,
   },
 });
 
