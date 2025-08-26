@@ -14,8 +14,8 @@ export type PickedMedia = {
   height: number;
   mime?: string;
   size?: number;
-  filename?: string | null;
-  exif?: Record<string, unknown> | null;
+  filename?: string; // ✅ no null anymore
+  exif?: Record<string, unknown>; // ✅ no null anymore
   duration?: number; // videos only
   data?: string;
   cropRect?: {
@@ -27,7 +27,6 @@ export type PickedMedia = {
   creationDate?: string;
   modificationDate?: string;
 };
-
 const baseOptions: Options = {
   cropping: false,
   includeBase64: false,
@@ -51,8 +50,8 @@ const mapToPicked = (media: ImageOrVideo): PickedMedia => ({
   height: media.height ?? 0,
   mime: media.mime,
   size: media.size,
-  filename: media.filename ?? null,
-  exif: (media as any).exif ?? null,
+  filename: media.filename ?? undefined,
+  exif: (media as any).exif ?? undefined,
   duration: (media as any).duration,
   data: (media as any).data,
   cropRect: (media as any).cropRect,

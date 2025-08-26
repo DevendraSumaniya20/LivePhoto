@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { isVideo } from '../utils/mediaPicker';
+import { isVideo, PickedMedia } from '../utils/mediaPicker'; // ✅ import type
 import {
   formatCropRect,
   formatDate,
@@ -21,24 +21,8 @@ import Components from '.';
 import Colors from '../constants/color';
 import { moderateScale } from '../constants/responsive';
 
-type MediaType = {
-  path: string;
-  filename?: string;
-  localIdentifier?: string;
-  size?: number;
-  width?: number;
-  height?: number;
-  mime: string;
-  creationDate?: string;
-  modificationDate?: string;
-  duration?: number;
-  cropRect?: any;
-  sourceURL?: string;
-  exif?: Record<string, any>;
-};
-
 type MediaDetailsProps = {
-  media: MediaType | null;
+  media: PickedMedia | null;
   clearMedia: () => void;
   renderMediaPreview: () => React.ReactNode;
 };
@@ -123,10 +107,12 @@ const MediaDetails: React.FC<MediaDetailsProps> = ({
           label="File Size"
           value={formatFileSize(media.size ?? 0)}
         />
-        <Components.DetailRow
-          label="MIME Type"
-          value={formatMimeType(media.mime)}
-        />
+        {media.mime && (
+          <Components.DetailRow
+            label="MIME Type"
+            value={formatMimeType(media.mime)}
+          />
+        )}
         <Components.DetailRow
           label="Media Type"
           value={isVideo(media.mime) ? 'Video' : 'Image'}
