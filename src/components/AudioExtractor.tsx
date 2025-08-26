@@ -34,7 +34,7 @@ const AudioExtractor: React.FC<Props> = ({ extractedAudio }) => {
   const [isSaving, setIsSaving] = useState(false);
 
   const soundRef = useRef<Sound | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     Sound.setCategory('Playback');
@@ -166,8 +166,6 @@ const AudioExtractor: React.FC<Props> = ({ extractedAudio }) => {
   );
 };
 
-export default AudioExtractor;
-
 const styles = StyleSheet.create({
   container: {
     padding: moderateScale(16),
@@ -235,3 +233,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+export default AudioExtractor;
