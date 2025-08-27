@@ -7,7 +7,7 @@ import {
   StatusBar,
   Alert,
   ScrollView,
-  Platform, // ✅ import Platform
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Video from 'react-native-video';
@@ -24,8 +24,9 @@ import styles from './styles';
 import Components from '../../components';
 import { isVideo } from '../../utils/mediaPicker';
 import { RootStackParamList } from '../../navigation/types';
+import Icons from '../../constants/svgPath';
+import { moderateScale } from '../../constants/responsive';
 
-// ✅ Use only the merged AudioModule
 const { AudioModule } = NativeModules;
 
 interface ExtractedAudio {
@@ -57,16 +58,14 @@ const VideoScreen = (): ReactElement => {
   const [cleanedAudio, setCleanedAudio] = useState<ExtractedAudio | null>(null);
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
   const [isCleaning, setIsCleaning] = useState<boolean>(false);
-  const [muted, setMuted] = useState<boolean>(false);
 
   const clearMedia = (): void => {
     navigation.goBack();
   };
 
-  console.log('📂 Media path:', media?.path);
-
   const renderMediaPreview = () => {
     if (!media) return null;
+
     if (isVideo(media.mime)) {
       return (
         <Video
@@ -74,29 +73,26 @@ const VideoScreen = (): ReactElement => {
           style={styles.preview}
           controls
           paused
-          renderLoader={() => (
-            <Text style={styles.loadingText}>Loading...</Text>
-          )}
-          volume={muted ? 0.0 : 1.0}
+          resizeMode="contain"
+          repeat={false}
+          volume={1.0}
           onError={err => {
             console.error('Video playback error:', err);
             Alert.alert('Error', 'Failed to load video');
           }}
-          resizeMode="cover"
-          repeat={false}
         />
       );
     }
+
     return (
       <Image
         source={{ uri: media.path }}
         style={styles.preview}
-        resizeMode="cover"
+        resizeMode="contain"
       />
     );
   };
 
-  // ✅ Extract Audio via AudioModule
   const handleExtractAudio = async (): Promise<void> => {
     if (!media || !isVideo(media.mime)) {
       return Alert.alert(
@@ -114,8 +110,6 @@ const VideoScreen = (): ReactElement => {
         return Alert.alert('Extraction Failed', 'No audio track found.');
       }
 
-      // ✅ Different default format for iOS/Android
-      // ✅ Use container formats
       const defaultFormat = Platform.OS === 'ios' ? 'm4a' : 'm4a';
 
       setExtractedAudio({
@@ -124,7 +118,7 @@ const VideoScreen = (): ReactElement => {
         sampleRate: result.sampleRate || 44100,
       });
 
-      setCleanedAudio(null); // reset cleaned audio
+      setCleanedAudio(null);
       Alert.alert('Success', 'Audio extracted and ready to play!');
     } catch (err: any) {
       console.error('Audio extraction error:', err);
@@ -134,7 +128,6 @@ const VideoScreen = (): ReactElement => {
     }
   };
 
-  // ✅ Clean Audio via AudioModule (with platform-specific filename)
   const handleCleanAudio = async (): Promise<void> => {
     const inputPath = cleanedAudio?.path || extractedAudio?.path;
     if (!inputPath) {
@@ -144,14 +137,11 @@ const VideoScreen = (): ReactElement => {
     setIsCleaning(true);
     try {
       const timestamp = Date.now();
-
-      // ✅ Ensure correct extension per platform
       const extension = '.m4a';
       const outputPath = inputPath.replace(
         /\.\w+$/,
         `_cleaned_${timestamp}${extension}`,
       );
-
       const cleanedPath = await AudioModule.cleanAudio(inputPath, outputPath);
 
       setCleanedAudio({
@@ -174,62 +164,67 @@ const VideoScreen = (): ReactElement => {
       <StatusBar barStyle="light-content" backgroundColor={Colors.black} />
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
-          style={styles.scrollContainer}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Text style={styles.backButton}>← Back</Text>
+              <Icons.LeftArrow
+                height={moderateScale(30)}
+                width={moderateScale(30)}
+                stroke={Colors.white}
+                fill={Colors.white}
+              />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Media Details</Text>
-            <Text style={styles.headerSubtitle}>
-              {media ? 'Selected Media' : 'Live Photo Result'}
-            </Text>
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={styles.headerTitle}>Media Details</Text>
+              <Text style={styles.headerSubtitle}>
+                {media ? 'Selected Media' : 'Live Photo Result'}
+              </Text>
+            </View>
+            <View style={{ width: moderateScale(30) }} />
           </View>
 
-          {/* Live Photo Result Display */}
+          {/* Live Photo Result */}
           {!media && livePhotoResult && (
-            <>
-              <View style={styles.mediaDetailsContainer}>
-                <Text style={styles.headerSubtitle}>Live Photo Output</Text>
-                <Image
-                  source={{ uri: `file://${livePhotoResult.photo}` }}
-                  style={styles.preview}
+            <View style={styles.livePhotoContainer}>
+              <Text style={styles.livePhotoLabel}>Live Photo Output</Text>
+              <Image
+                source={{ uri: `file://${livePhotoResult.photo}` }}
+                style={styles.livePhotoImage}
+                resizeMode="cover"
+              />
+              {livePhotoResult.video && (
+                <Video
+                  source={{ uri: `file://${livePhotoResult.video}` }}
+                  style={styles.livePhotoVideo}
+                  controls
+                  paused
                   resizeMode="cover"
                 />
-                {livePhotoResult.video ? (
-                  <Video
-                    source={{ uri: `file://${livePhotoResult.video}` }}
-                    style={[styles.preview, { marginTop: 10 }]}
-                    controls
-                    paused
-                    resizeMode="cover"
-                  />
-                ) : null}
-                {livePhotoResult.transcription?.length ? (
-                  <View style={{ marginTop: 12 }}>
-                    <Text style={styles.headerSubtitle}>Transcription</Text>
-                    <Text style={{ color: Colors.white }}>
-                      {livePhotoResult.transcription}
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
-            </>
+              )}
+              {livePhotoResult.transcription?.length > 0 && (
+                <View style={styles.transcriptionContainer}>
+                  <Text style={styles.livePhotoText}>
+                    {livePhotoResult.transcription}
+                  </Text>
+                </View>
+              )}
+            </View>
           )}
 
-          {/* Regular Media Display */}
+          {/* Regular Media */}
           {media && (
-            <>
-              <View style={styles.mediaDetailsContainer}>
-                <Components.MediaDetails
-                  media={media}
-                  clearMedia={clearMedia}
-                  renderMediaPreview={renderMediaPreview}
-                />
-              </View>
+            <View style={styles.mediaDetailsContainer}>
+              {/* Media Preview */}
+              <Components.MediaDetails
+                media={media}
+                clearMedia={clearMedia}
+                renderMediaPreview={renderMediaPreview}
+              />
 
+              {/* Extract Audio Button */}
               {isVideo(media.mime) && (
                 <TouchableOpacity
                   style={[
@@ -241,14 +236,14 @@ const VideoScreen = (): ReactElement => {
                   activeOpacity={0.8}
                 >
                   <View style={styles.extractButtonContent}>
-                    <Text style={styles.extractButtonIcon}>🎵</Text>
                     <Text style={styles.extractButtonText}>
-                      {isExtracting ? 'Extracting...' : 'Extract Audio'}
+                      {isExtracting ? 'Extracting...' : '🎵 Extract Audio'}
                     </Text>
                   </View>
                 </TouchableOpacity>
               )}
 
+              {/* Clean Audio Button */}
               {extractedAudio && (
                 <TouchableOpacity
                   style={[
@@ -260,26 +255,24 @@ const VideoScreen = (): ReactElement => {
                   activeOpacity={0.8}
                 >
                   <View style={styles.extractButtonContent}>
-                    <Text style={styles.extractButtonIcon}>
-                      {cleanedAudio ? '🔄' : '✨'}
-                    </Text>
                     <Text style={styles.extractButtonText}>
                       {isCleaning
                         ? cleanedAudio
                           ? 'Re-cleaning...'
                           : 'Cleaning...'
                         : cleanedAudio
-                        ? 'Clean Again'
-                        : 'Clean Audio'}
+                        ? '🔄 Clean Again'
+                        : '✨ Clean Audio'}
                     </Text>
                   </View>
                 </TouchableOpacity>
               )}
 
+              {/* Audio Players */}
               {extractedAudio && (
                 <View style={styles.audioPlayerContainer}>
                   <Text style={styles.audioTitle}>
-                    🎵 Extracted Audio (Raw - {Platform.OS.toUpperCase()}):
+                    🎵 Extracted Audio ({Platform.OS.toUpperCase()})
                   </Text>
                   <Components.AudioExtractor extractedAudio={extractedAudio} />
                 </View>
@@ -288,12 +281,12 @@ const VideoScreen = (): ReactElement => {
               {cleanedAudio && (
                 <View style={styles.audioPlayerContainer}>
                   <Text style={styles.audioTitle}>
-                    ✨ Cleaned Audio (Processed - {Platform.OS.toUpperCase()}):
+                    ✨ Cleaned Audio ({Platform.OS.toUpperCase()})
                   </Text>
                   <Components.AudioExtractor extractedAudio={cleanedAudio} />
                 </View>
               )}
-            </>
+            </View>
           )}
         </ScrollView>
       </SafeAreaView>

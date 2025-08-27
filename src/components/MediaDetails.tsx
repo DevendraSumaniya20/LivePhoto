@@ -19,7 +19,11 @@ import {
 } from '../utils/FormattingData';
 import Components from '.';
 import Colors from '../constants/color';
-import { moderateScale, scale } from '../constants/responsive';
+import { moderateHeight, moderateScale, scale } from '../constants/responsive';
+
+import LinearGradient from 'react-native-linear-gradient';
+import { getGradientProps } from '../utils/gradients';
+import Icons from '../constants/svgPath';
 
 type MediaDetailsProps = {
   media: PickedMedia | null;
@@ -56,17 +60,17 @@ const MediaDetails: React.FC<MediaDetailsProps> = ({
       showsVerticalScrollIndicator={false}
     >
       {/* Media Preview Card */}
-      <View style={styles.previewCard}>
+      <LinearGradient {...getGradientProps()} style={styles.previewCard}>
         <View style={styles.previewHeader}>
-          <Text style={styles.previewTitle}>
+          {/* <Text style={styles.previewTitle}>
             Selected {isVideo(media.mime) ? 'Video' : 'Image'}
-          </Text>
+          </Text> */}
           <TouchableOpacity onPress={clearMedia} style={styles.clearBtn}>
-            <Text style={styles.clearBtnText}>✕</Text>
+            <Icons.Cross height={moderateScale(20)} width={moderateScale(20)} />
           </TouchableOpacity>
         </View>
         <View style={styles.imageContainer}>{renderMediaPreview()}</View>
-      </View>
+      </LinearGradient>
 
       {/* Quick Info Card */}
       <TouchableOpacity
@@ -202,7 +206,7 @@ export default MediaDetails;
 const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   detailsWrap: {
-    paddingHorizontal: moderateScale(8),
+    paddingHorizontal: moderateScale(4),
     paddingBottom: moderateScale(30),
   },
   previewCard: {
@@ -244,6 +248,9 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(16),
     overflow: 'hidden',
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    height: moderateHeight(30),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   preview: { width: '100%', height: moderateScale(300) },
   quickInfoCard: {

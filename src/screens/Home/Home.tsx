@@ -34,7 +34,7 @@ interface LivePhotoResult {
 interface DeviceCompatibility {
   isSupported: boolean;
   message: string;
-  deviceInfo: string;
+  deviceInfo?: string;
 }
 
 const Home = (): ReactElement => {
@@ -69,7 +69,7 @@ const Home = (): ReactElement => {
       const compatibility: DeviceCompatibility = {
         isSupported: result.isSupported,
         message: result.message,
-        deviceInfo: result.deviceInfo ?? 'Unknown device',
+        deviceInfo: (result as any).deviceInfo ?? undefined,
       };
       setDeviceCompatibility(compatibility);
 
@@ -110,8 +110,14 @@ const Home = (): ReactElement => {
   const proceedWithLivePhoto = async (): Promise<void> => {
     setIsProcessingLivePhoto(true);
     try {
-      const result: LivePhotoResult = await pickLivePhotoAndProcess();
-      navigation.navigate('Video', { livePhotoResult: result });
+      const result = await pickLivePhotoAndProcess();
+      const normalized: LivePhotoResult = {
+        photo: result.photo,
+        video: result.video,
+        audio: result.audio ?? '',
+        transcription: result.transcription ?? '',
+      };
+      navigation.navigate('Video', { livePhotoResult: normalized });
       Alert.alert('Success', 'Live Photo processed successfully!');
     } catch (err: any) {
       console.error('Live Photo Error:', err);

@@ -1,5 +1,9 @@
 import { StyleSheet } from 'react-native';
-import { moderateScale } from '../../constants/responsive';
+import {
+  moderateHeight,
+  moderateScale,
+  moderateWidth,
+} from '../../constants/responsive';
 import Colors from '../../constants/color';
 
 const styles = StyleSheet.create({
@@ -12,51 +16,61 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: moderateScale(20),
-    paddingBottom: moderateScale(50),
+    paddingHorizontal: moderateScale(14),
+    paddingBottom: moderateScale(20),
   },
 
   // Header
   header: {
+    width: '100%',
     marginBottom: moderateScale(20),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerTitle: {
     color: Colors.white,
     fontSize: moderateScale(28),
     fontWeight: 'bold',
     marginBottom: moderateScale(5),
+    textAlign: 'center',
   },
   headerSubtitle: {
     color: Colors.white,
     fontSize: moderateScale(16),
     opacity: 0.8,
+    textAlign: 'center',
   },
   backButton: {
     color: Colors.white,
     fontSize: moderateScale(16),
-    marginBottom: moderateScale(10),
     padding: moderateScale(5),
   },
 
   // Media preview
   mediaDetailsContainer: {
+    width: '100%',
+    // alignItems: 'center',
     marginBottom: moderateScale(20),
   },
   preview: {
-    width: '100%',
-    height: moderateScale(250),
+    width: '90%',
+    height: moderateScale(220),
     borderRadius: moderateScale(12),
-    backgroundColor: Colors.black50,
+    backgroundColor: Colors.gray300,
+    marginVertical: moderateScale(10),
   },
 
   // Audio extraction buttons
   extractButton: {
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.primary,
     paddingVertical: moderateScale(15),
     borderRadius: moderateScale(12),
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: moderateScale(15),
+    width: '70%',
+    alignSelf: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -70,6 +84,7 @@ const styles = StyleSheet.create({
   extractButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   extractButtonIcon: {
     fontSize: moderateScale(24),
@@ -79,10 +94,13 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontWeight: 'bold',
     fontSize: moderateScale(16),
+    textAlign: 'center',
   },
 
   // Audio Player
   audioPlayerContainer: {
+    width: '90%',
+    alignItems: 'center',
     marginBottom: moderateScale(20),
     padding: moderateScale(15),
     backgroundColor: Colors.black50,
@@ -93,27 +111,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: moderateScale(16),
     marginBottom: moderateScale(10),
+    textAlign: 'center',
   },
 
   // Live Photo container
   livePhotoContainer: {
+    width: '90%',
     marginTop: moderateScale(20),
     padding: moderateScale(20),
     backgroundColor: Colors.black50,
     borderRadius: moderateScale(15),
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 8,
-    alignItems: 'center',
   },
   livePhotoLabel: {
     color: Colors.white,
     fontWeight: 'bold',
     fontSize: moderateScale(16),
     marginBottom: moderateScale(8),
-    marginTop: moderateScale(15),
     textAlign: 'center',
   },
   livePhotoText: {
@@ -122,16 +141,15 @@ const styles = StyleSheet.create({
     marginBottom: moderateScale(15),
     textAlign: 'center',
     lineHeight: moderateScale(20),
-    paddingHorizontal: moderateScale(10),
   },
   livePhotoImage: {
-    width: moderateScale(250),
+    width: '90%',
     height: moderateScale(250),
     marginBottom: moderateScale(15),
     borderRadius: moderateScale(12),
   },
   livePhotoVideo: {
-    width: '100%',
+    width: '90%',
     height: moderateScale(200),
     borderRadius: moderateScale(12),
     marginTop: moderateScale(10),
@@ -159,13 +177,16 @@ const styles = StyleSheet.create({
   bottomSpacing: {
     height: moderateScale(30),
   },
+
+  // Video container
   videoContainer: {
+    width: '90%',
     position: 'relative',
     borderRadius: moderateScale(16),
     overflow: 'hidden',
     backgroundColor: Colors.black,
+    alignSelf: 'center',
   },
-
   videoLoader: {
     position: 'absolute',
     top: 0,
@@ -195,77 +216,14 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: 'rgba(255, 255, 255, 0.8)',
   },
-
   playButtonText: {
     fontSize: moderateScale(24),
     color: Colors.white,
   },
 
-  // Media Controls
-  mediaControlsContainer: {
-    backgroundColor: Colors.white,
-    borderRadius: moderateScale(20),
-    padding: moderateScale(20),
-    marginHorizontal: moderateScale(20),
-    marginVertical: moderateScale(16),
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-
-  mediaControlButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0, 123, 255, 0.1)',
-    borderRadius: moderateScale(16),
-    padding: moderateScale(16),
-    borderWidth: 2,
-    borderColor: '#007AFF',
-  },
-
-  mediaControlIcon: {
-    fontSize: moderateScale(20),
-    marginRight: moderateScale(12),
-  },
-
-  mediaControlText: {
-    fontSize: moderateScale(16),
-    fontWeight: '600',
-    color: '#007AFF',
-  },
-
-  // Live Photo Video Styles
-  liveVideoContainer: {
-    position: 'relative',
-    borderRadius: moderateScale(16),
-    overflow: 'hidden',
-    backgroundColor: Colors.black,
-    marginTop: moderateScale(12),
-  },
-
-  liveVideoPlayButton: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    width: moderateScale(60),
-    height: moderateScale(60),
-    borderRadius: moderateScale(30),
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    transform: [
-      { translateX: -moderateScale(30) },
-      { translateY: -moderateScale(30) },
-    ],
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
-  },
-
   // Transcription Container
   transcriptionContainer: {
+    width: '90%',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: moderateScale(12),
     padding: moderateScale(16),
