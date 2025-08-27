@@ -1,13 +1,14 @@
-package com.livephoto.LivePhotoManagerModule
+// AudioPackage.kt
+package com.livephoto.audiomodule
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.uimanager.ViewManager
 
-class LivePhotoPackage : ReactPackage {
+class AudioPackage : ReactPackage {
     override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-        return listOf(LivePhotoManagerModule(reactContext))
+        return listOf(AudioModule(reactContext))
     }
 
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {

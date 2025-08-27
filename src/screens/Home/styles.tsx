@@ -12,165 +12,152 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: moderateScale(20),
-    paddingBottom: moderateScale(50),
+    paddingTop: moderateScale(20),
+    paddingBottom: moderateScale(40),
   },
 
-  // Header
+  // Header Section
   header: {
-    marginBottom: moderateScale(20),
+    alignItems: 'center',
+    marginBottom: moderateScale(40),
+    paddingVertical: moderateScale(20),
   },
   headerTitle: {
     color: Colors.white,
-    fontSize: moderateScale(28),
-    fontWeight: 'bold',
-    marginBottom: moderateScale(5),
-  },
-  headerSubtitle: {
-    color: Colors.white,
-    fontSize: moderateScale(16),
-  },
-
-  // Action buttons container
-  actionContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: moderateScale(20),
-    gap: moderateScale(10),
-  },
-
-  // Media preview
-  mediaDetailsContainer: {
-    marginBottom: moderateScale(20),
-  },
-  preview: {
-    width: '100%',
-    height: moderateScale(200),
-    borderRadius: moderateScale(12),
-    backgroundColor: Colors.black50,
-  },
-
-  // Audio extraction buttons
-  extractButtonContainer: {
-    marginBottom: moderateScale(15),
-  },
-  extractButton: {
-    backgroundColor: Colors.black,
-    paddingVertical: moderateScale(12),
-    borderRadius: moderateScale(12),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  extractButtonDisabled: {
-    backgroundColor: Colors.white60,
-  },
-  extractButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  extractButtonIcon: {
-    fontSize: moderateScale(20),
-    marginRight: moderateScale(8),
-  },
-  extractButtonText: {
-    color: Colors.white,
-    fontWeight: 'bold',
-    fontSize: moderateScale(16),
-  },
-
-  // Audio Player
-  audioPlayerContainer: {
-    marginBottom: moderateScale(20),
-  },
-  audioTitle: {
-    color: Colors.white,
-    fontWeight: 'bold',
-    marginBottom: moderateScale(5),
-  },
-
-  // Live Photo container
-  livePhotoContainer: {
-    marginTop: moderateScale(20),
-    padding: moderateScale(15),
-    backgroundColor: Colors.black50,
-    borderRadius: moderateScale(12),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  livePhotoLabel: {
-    color: Colors.white,
-    fontWeight: 'bold',
-    marginBottom: moderateScale(5),
-  },
-  livePhotoText: {
-    color: Colors.white,
-    marginBottom: moderateScale(10),
+    fontSize: moderateScale(32),
+    fontWeight: '700',
+    letterSpacing: moderateScale(1.2),
+    marginBottom: moderateScale(8),
     textAlign: 'center',
   },
-  livePhotoImage: {
-    width: moderateScale(200),
-    height: moderateScale(200),
-    marginBottom: moderateScale(10),
-    borderRadius: moderateScale(12),
-  },
-  livePhotoVideo: {
-    width: moderateScale(300),
-    height: moderateScale(200),
-    borderRadius: moderateScale(12),
+  headerSubtitle: {
+    color: Colors.white60,
+    fontSize: moderateScale(16),
+    fontWeight: '400',
+    textAlign: 'center',
+    marginBottom: moderateScale(16),
+    letterSpacing: moderateScale(0.5),
   },
 
-  // Loading overlay
+  // Compatibility Badge
+  compatibilityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(8),
+    borderRadius: moderateScale(25),
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  compatibilityIcon: {
+    fontSize: moderateScale(18),
+    marginRight: moderateScale(8),
+  },
+  compatibilityText: {
+    fontSize: moderateScale(14),
+    fontWeight: '600',
+    letterSpacing: moderateScale(0.3),
+  },
+
+  // Action Buttons Container
+  actionContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'stretch',
+    gap: moderateScale(20),
+    paddingVertical: moderateScale(20),
+  },
+
+  // Loading Overlay
   loadingOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: Colors.black80,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
+    zIndex: 1000,
   },
   loadingText: {
     color: Colors.white,
-    fontSize: moderateScale(16),
-    fontWeight: 'bold',
-  },
-
-  // Bottom spacing
-  bottomSpacing: {
-    height: moderateScale(30),
-  },
-
-  compatibilityBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginTop: 8,
-    alignSelf: 'center',
-  },
-
-  compatibilityIcon: {
-    fontSize: 16,
-    marginRight: 6,
-  },
-
-  compatibilityText: {
-    fontSize: 14,
+    fontSize: moderateScale(18),
     fontWeight: '600',
+    textAlign: 'center',
+    marginTop: moderateScale(16),
+    letterSpacing: moderateScale(0.5),
+  },
+  loadingSpinner: {
+    marginBottom: moderateScale(16),
   },
 
-  // If ActionButton component needs disabled state styling
+  // Bottom Spacing
+  bottomSpacing: {
+    height: moderateScale(20),
+  },
+
+  // Action Button Disabled State (for ActionButton component)
   actionButtonDisabled: {
-    opacity: 0.5,
+    opacity: 0.4,
+    transform: [{ scale: 0.95 }],
+  },
+
+  // Additional utility styles
+  centerContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Gradient background overlay (if needed)
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: moderateScale(200),
+    opacity: 0.1,
+  },
+
+  // Enhanced shadow for important elements
+  shadowLarge: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+
+  // Responsive action container for different screen sizes
+  actionContainerLarge: {
+    maxWidth: moderateScale(400),
+    alignSelf: 'center',
+    width: '100%',
+  },
+
+  // Status indicator styles
+  statusIndicator: {
+    width: moderateScale(12),
+    height: moderateScale(12),
+    borderRadius: moderateScale(6),
+    marginRight: moderateScale(8),
+  },
+  statusSupported: {
+    backgroundColor: '#4CAF50',
+  },
+  statusLimited: {
+    backgroundColor: '#FF9800',
+  },
+  statusChecking: {
+    backgroundColor: '#999',
   },
 });
 

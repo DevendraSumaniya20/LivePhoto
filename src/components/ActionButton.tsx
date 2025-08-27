@@ -1,15 +1,22 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ViewStyle,
+} from 'react-native';
 import { moderateScale } from '../constants/responsive';
 import Colors from '../constants/color';
 
-type ActionButtonProps = {
+interface ActionButtonProps {
   icon: string;
   title: string;
   subtitle: string;
   onPress: () => void;
-};
-
+  disabled?: boolean;
+  style?: ViewStyle;
+}
 const ActionButton: React.FC<ActionButtonProps> = ({
   icon,
   title,

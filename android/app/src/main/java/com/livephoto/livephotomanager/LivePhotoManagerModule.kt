@@ -1,4 +1,4 @@
-package com.livephoto.LivePhotoManagerModule
+package com.livephoto.livephotomanager
 
 import android.app.Activity
 import android.content.Intent

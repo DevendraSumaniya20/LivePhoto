@@ -11,9 +11,8 @@ import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 
 // 👇 Import your custom packages
-import com.livephoto.audioextractor.AudioExtractorPackage
-import com.livephoto.LivePhotoManagerModule.LivePhotoPackage
-
+import com.livephoto.audiomodule.AudioPackage
+import com.livephoto.livephotomanager.LivePhotoPackage
 
 class MainApplication : Application(), ReactApplication {
 
@@ -23,7 +22,7 @@ class MainApplication : Application(), ReactApplication {
             override fun getPackages(): List<ReactPackage> =
                 PackageList(this).packages.apply {
                     // Add your custom packages here
-                    add(AudioExtractorPackage())
+                    add(AudioPackage())
                     add(LivePhotoPackage())
                 }
 

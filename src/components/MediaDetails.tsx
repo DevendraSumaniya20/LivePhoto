@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,20 +6,20 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { isVideo, PickedMedia } from '../utils/mediaPicker'; // ✅ import type
+import { isVideo, PickedMedia } from '../utils/mediaPicker';
 import {
-  formatCropRect,
+  formatFileSize,
+  formatResolution,
+  formatMimeType,
   formatDate,
   formatDuration,
+  formatCropRect,
   formatExifKey,
   formatExifValue,
-  formatFileSize,
-  formatMimeType,
-  formatResolution,
 } from '../utils/FormattingData';
 import Components from '.';
 import Colors from '../constants/color';
-import { moderateScale } from '../constants/responsive';
+import { moderateScale, scale } from '../constants/responsive';
 
 type MediaDetailsProps = {
   media: PickedMedia | null;
@@ -32,6 +32,10 @@ const MediaDetails: React.FC<MediaDetailsProps> = ({
   clearMedia,
   renderMediaPreview,
 }) => {
+  const [showQuickInfo, setShowQuickInfo] = useState(true);
+  const [showDetails, setShowDetails] = useState(true);
+  const [showExif, setShowExif] = useState(false);
+
   if (!media) {
     return (
       <View style={styles.emptyState}>
@@ -65,101 +69,129 @@ const MediaDetails: React.FC<MediaDetailsProps> = ({
       </View>
 
       {/* Quick Info Card */}
-      <View style={styles.quickInfoCard}>
-        <Text style={styles.cardTitle}>Quick Info</Text>
-        <View style={styles.quickInfoRow}>
-          <View style={styles.quickInfoItem}>
-            <Text style={styles.quickInfoLabel}>Size</Text>
-            <Text style={styles.quickInfoValue}>
-              {formatFileSize(media.size ?? 0, true)}
-            </Text>
-          </View>
-          <View style={styles.quickInfoItem}>
-            <Text style={styles.quickInfoLabel}>Resolution</Text>
-            <Text style={styles.quickInfoValue}>
-              {formatResolution(media.width, media.height)}
-            </Text>
-          </View>
-          <View style={styles.quickInfoItem}>
-            <Text style={styles.quickInfoLabel}>Format</Text>
-            <Text style={styles.quickInfoValue}>
-              {formatMimeType(media.mime)}
-            </Text>
+      <TouchableOpacity
+        onPress={() => setShowQuickInfo(!showQuickInfo)}
+        style={styles.cardToggle}
+      >
+        <Text style={styles.cardTitle}>
+          {showQuickInfo ? 'Hide' : 'Show'} Quick Info
+        </Text>
+      </TouchableOpacity>
+      {showQuickInfo && (
+        <View style={styles.quickInfoCard}>
+          <View style={styles.quickInfoRow}>
+            <View style={styles.quickInfoItem}>
+              <Text style={styles.quickInfoLabel}>Size</Text>
+              <Text style={styles.quickInfoValue}>
+                {formatFileSize(media.size ?? 0, true)}
+              </Text>
+            </View>
+            <View style={styles.quickInfoItem}>
+              <Text style={styles.quickInfoLabel}>Resolution</Text>
+              <Text style={styles.quickInfoValue}>
+                {formatResolution(media.width, media.height)}
+              </Text>
+            </View>
+            <View style={styles.quickInfoItem}>
+              <Text style={styles.quickInfoLabel}>Format</Text>
+              <Text style={styles.quickInfoValue}>
+                {formatMimeType(media.mime)}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
+      )}
 
       {/* Detailed Info Card */}
-      <View style={styles.detailsCard}>
-        <Text style={styles.cardTitle}>Detailed Information</Text>
+      <TouchableOpacity
+        onPress={() => setShowDetails(!showDetails)}
+        style={styles.cardToggle}
+      >
+        <Text style={styles.cardTitle}>
+          {showDetails ? 'Hide' : 'Show'} Detailed Info
+        </Text>
+      </TouchableOpacity>
+      {showDetails && (
+        <View style={styles.detailsCard}>
+          <Components.DetailRow label="File Path" value={media.path} />
+          {media.filename && (
+            <Components.DetailRow label="Filename" value={media.filename} />
+          )}
+          {media.localIdentifier && (
+            <Components.DetailRow
+              label="Local Identifier"
+              value={media.localIdentifier}
+            />
+          )}
+          <Components.DetailRow
+            label="File Size"
+            value={formatFileSize(media.size ?? 0)}
+          />
+          {media.mime && (
+            <Components.DetailRow
+              label="MIME Type"
+              value={formatMimeType(media.mime)}
+            />
+          )}
+          <Components.DetailRow
+            label="Media Type"
+            value={isVideo(media.mime) ? 'Video' : 'Image'}
+          />
+          {media.creationDate && (
+            <Components.DetailRow
+              label="Created"
+              value={formatDate(parseInt(media.creationDate) * 1000)}
+            />
+          )}
+          {media.modificationDate && (
+            <Components.DetailRow
+              label="Modified"
+              value={formatDate(parseInt(media.modificationDate) * 1000)}
+            />
+          )}
+          {media.duration && (
+            <Components.DetailRow
+              label="Duration"
+              value={formatDuration(media.duration)}
+            />
+          )}
+          {media.cropRect && (
+            <Components.DetailRow
+              label="Crop Rectangle"
+              value={formatCropRect(media.cropRect)}
+            />
+          )}
+          {media.sourceURL && (
+            <Components.DetailRow label="Source URL" value={media.sourceURL} />
+          )}
+        </View>
+      )}
 
-        <Components.DetailRow label="File Path" value={media.path} />
-        {media.filename && (
-          <Components.DetailRow label="Filename" value={media.filename} />
-        )}
-        {media.localIdentifier && (
-          <Components.DetailRow
-            label="Local Identifier"
-            value={media.localIdentifier}
-          />
-        )}
-        <Components.DetailRow
-          label="File Size"
-          value={formatFileSize(media.size ?? 0)}
-        />
-        {media.mime && (
-          <Components.DetailRow
-            label="MIME Type"
-            value={formatMimeType(media.mime)}
-          />
-        )}
-        <Components.DetailRow
-          label="Media Type"
-          value={isVideo(media.mime) ? 'Video' : 'Image'}
-        />
-        {media.creationDate && (
-          <Components.DetailRow
-            label="Created"
-            value={formatDate(parseInt(media.creationDate) * 1000)}
-          />
-        )}
-        {media.modificationDate && (
-          <Components.DetailRow
-            label="Modified"
-            value={formatDate(parseInt(media.modificationDate) * 1000)}
-          />
-        )}
-        {media.duration && (
-          <Components.DetailRow
-            label="Duration"
-            value={formatDuration(media.duration)}
-          />
-        )}
-        {media.cropRect && (
-          <Components.DetailRow
-            label="Crop Rectangle"
-            value={formatCropRect(media.cropRect)}
-          />
-        )}
-        {media.sourceURL && (
-          <Components.DetailRow label="Source URL" value={media.sourceURL} />
-        )}
-      </View>
-
-      {/* EXIF Data Card - Only for images */}
+      {/* EXIF Data Card */}
       {!isVideo(media.mime) &&
         media.exif &&
         Object.keys(media.exif).length > 0 && (
-          <View style={styles.exifCard}>
-            <Text style={styles.cardTitle}>EXIF Data</Text>
-            {Object.entries(media.exif).map(([key, value]) => (
-              <Components.DetailRow
-                key={key}
-                label={formatExifKey(key)}
-                value={formatExifValue(key, value)}
-              />
-            ))}
-          </View>
+          <>
+            <TouchableOpacity
+              onPress={() => setShowExif(!showExif)}
+              style={styles.cardToggle}
+            >
+              <Text style={styles.cardTitle}>
+                {showExif ? 'Hide' : 'Show'} EXIF Data
+              </Text>
+            </TouchableOpacity>
+            {showExif && (
+              <View style={styles.exifCard}>
+                {Object.entries(media.exif).map(([key, value]) => (
+                  <Components.DetailRow
+                    key={key}
+                    label={formatExifKey(key)}
+                    value={formatExifValue(key, value)}
+                  />
+                ))}
+              </View>
+            )}
+          </>
         )}
     </ScrollView>
   );
@@ -170,14 +202,14 @@ export default MediaDetails;
 const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   detailsWrap: {
-    paddingHorizontal: moderateScale(20),
+    paddingHorizontal: moderateScale(8),
     paddingBottom: moderateScale(30),
   },
   previewCard: {
     backgroundColor: Colors.white,
     borderRadius: moderateScale(20),
-    padding: moderateScale(20),
-    marginBottom: moderateScale(16),
+    padding: moderateScale(14),
+    marginBottom: moderateScale(24),
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
@@ -191,7 +223,7 @@ const styles = StyleSheet.create({
     marginBottom: moderateScale(16),
   },
   previewTitle: {
-    fontSize: moderateScale(20),
+    fontSize: moderateScale(24),
     fontWeight: '700',
     color: Colors.black,
   },
@@ -204,7 +236,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   clearBtnText: {
-    color: Colors.black,
+    color: Colors.gray800,
     fontSize: moderateScale(16),
     fontWeight: '600',
   },
@@ -217,7 +249,7 @@ const styles = StyleSheet.create({
   quickInfoCard: {
     backgroundColor: Colors.white,
     borderRadius: moderateScale(20),
-    padding: moderateScale(20),
+    padding: moderateScale(10),
     marginBottom: moderateScale(16),
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 4 },
@@ -225,21 +257,15 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
-  cardTitle: {
-    fontSize: moderateScale(18),
-    fontWeight: '700',
-    color: Colors.black,
-    marginBottom: moderateScale(16),
-    textAlign: 'center',
-  },
+
   quickInfoRow: { flexDirection: 'row', justifyContent: 'space-between' },
   quickInfoItem: { alignItems: 'center', flex: 1 },
   quickInfoLabel: {
-    fontSize: moderateScale(12),
+    fontSize: scale(14),
     color: Colors.black,
     opacity: 0.6,
-    marginBottom: moderateScale(4),
-    fontWeight: '500',
+    marginBottom: moderateScale(6),
+    fontWeight: 'bold',
   },
   quickInfoValue: {
     fontSize: moderateScale(14),
@@ -292,5 +318,27 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     textAlign: 'center',
     lineHeight: moderateScale(24),
+  },
+
+  cardTitle: {
+    fontSize: moderateScale(16),
+    fontWeight: '700',
+    color: Colors.black,
+    textAlign: 'center',
+  },
+
+  cardToggle: {
+    backgroundColor: Colors.white,
+    borderRadius: moderateScale(20),
+    paddingVertical: moderateScale(12),
+    paddingHorizontal: moderateScale(10),
+    marginBottom: moderateScale(8),
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

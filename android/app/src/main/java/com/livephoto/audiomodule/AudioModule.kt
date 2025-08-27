@@ -1,4 +1,5 @@
-package com.livephoto.audioextractor
+// AudioModule.kt
+package com.livephoto.audiomodule
 
 import android.media.MediaExtractor
 import android.media.MediaFormat
@@ -13,12 +14,10 @@ import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
 
-class AudioExtractorModule(reactContext: ReactApplicationContext) :
+class AudioModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
 
-    override fun getName(): String {
-        return "AudioExtractor"
-    }
+    override fun getName(): String = "AudioModule"
 
     @ReactMethod
     fun extractAudio(videoPath: String, promise: Promise) {

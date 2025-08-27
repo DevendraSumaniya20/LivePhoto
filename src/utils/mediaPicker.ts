@@ -81,3 +81,16 @@ export const pickFromCamera = async (): Promise<PickedMedia | null> => {
     return null;
   }
 };
+
+// --- Video recorder (camera, only video) ---
+export const recordVideo = async (): Promise<PickedMedia | null> => {
+  try {
+    const media = await ImagePicker.openCamera({
+      ...baseOptions,
+      mediaType: 'video', // ✅ Force only video recording
+    });
+    return mapToPicked(media);
+  } catch {
+    return null;
+  }
+};

@@ -2,31 +2,25 @@ import React, { ReactElement, useState, useEffect } from 'react';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   StatusBar,
   Alert,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Video from 'react-native-video';
 import { NativeModules } from 'react-native';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 
 import Colors from '../../constants/color';
 import styles from './styles';
 import Components from '../../components';
-import { PickedMedia, isVideo } from '../../utils/mediaPicker';
 import { handlePickMedia } from '../../utils/CameraPermission';
+import { RootStackParamList } from '../../navigation/types';
 
-const { AudioExtractor, AudioProcessor, LivePhotoManager } = NativeModules;
+type HomeScreenNavigationProp = NavigationProp<RootStackParamList, 'Home'>;
 
-interface ExtractedAudio {
-  path: string;
-  size: number;
-  duration: number;
-  format: string;
-  sampleRate: number;
-}
+const { LivePhotoManager } = NativeModules;
 
 interface LivePhotoResult {
   photo: string;
@@ -42,35 +36,35 @@ interface DeviceCompatibility {
 }
 
 const Home = (): ReactElement => {
-  const [media, setMedia] = useState<PickedMedia | null>(null);
-  const [extractedAudio, setExtractedAudio] = useState<ExtractedAudio | null>(
-    null,
-  );
-  const [cleanedAudio, setCleanedAudio] = useState<ExtractedAudio | null>(null);
-  const [isExtracting, setIsExtracting] = useState<boolean>(false);
-  const [isCleaning, setIsCleaning] = useState<boolean>(false);
-  const [livePhotoResult, setLivePhotoResult] =
-    useState<LivePhotoResult | null>(null);
+  const navigation = useNavigation<HomeScreenNavigationProp>();
   const [isProcessingLivePhoto, setIsProcessingLivePhoto] = useState(false);
-
-  // New state for device compatibility
   const [deviceCompatibility, setDeviceCompatibility] =
     useState<DeviceCompatibility | null>(null);
   const [isCheckingCompatibility, setIsCheckingCompatibility] = useState(false);
 
   // Check device compatibility on component mount
   useEffect(() => {
+    // Debug: Check if module is available
+    console.log('LivePhotoManager module:', LivePhotoManager);
+    console.log('Available methods:', Object.keys(LivePhotoManager || {}));
+
     checkDeviceCompatibility();
   }, []);
 
   const checkDeviceCompatibility = async (): Promise<void> => {
     setIsCheckingCompatibility(true);
     try {
+      // Check if LivePhotoManager module exists
+      if (!LivePhotoManager) {
+        throw new Error('LivePhotoManager module is not available');
+      }
+
+      // Call the native module method - it should return a Promise
       const result: DeviceCompatibility =
         await LivePhotoManager.checkDeviceCompatibility();
+
       setDeviceCompatibility(result);
 
-      // Show compatibility status to user (optional - you can remove this if you don't want automatic alerts)
       if (!result.isSupported) {
         Alert.alert('Device Compatibility Notice', result.message, [
           { text: 'OK', style: 'default' },
@@ -82,7 +76,6 @@ const Home = (): ReactElement => {
       }
     } catch (error: any) {
       console.error('Error checking device compatibility:', error);
-      // Set a fallback compatibility state
       setDeviceCompatibility({
         isSupported: false,
         message:
@@ -107,99 +100,23 @@ const Home = (): ReactElement => {
     );
   };
 
-  const clearMedia = (): void => {
-    setMedia(null);
-    setExtractedAudio(null);
-    setCleanedAudio(null);
-  };
-
-  const renderMediaPreview = () => {
-    if (!media) return null;
-    if (isVideo(media.mime)) {
-      return (
-        <Video
-          source={{ uri: media.path }}
-          style={styles.preview}
-          controls
-          paused
-        />
-      );
-    }
-    return (
-      <Image
-        source={{ uri: media.path }}
-        style={styles.preview}
-        resizeMode="cover"
-      />
-    );
-  };
-
-  const handleExtractAudio = async (): Promise<void> => {
-    if (!media || !isVideo(media.mime)) {
-      return Alert.alert(
-        'Invalid Media',
-        'Please select a video to extract audio.',
-      );
-    }
-
-    setIsExtracting(true);
+  // Handle media selection from gallery, camera, or record
+  const handleMediaSelection = async (
+    source: 'gallery' | 'camera' | 'record',
+  ) => {
     try {
-      const filePath = media.path.replace('file://', '');
-      const result = await AudioExtractor.extractAudio(filePath);
-
-      if (!result?.path) {
-        return Alert.alert('Extraction Failed', 'No audio track found.');
+      const selectedMedia = await handlePickMedia(source);
+      if (selectedMedia) {
+        // Navigate to Video screen with the selected media
+        navigation.navigate('Video', { media: selectedMedia });
       }
-
-      setExtractedAudio({
-        ...result,
-        format: result.format || 'm4a',
-        sampleRate: result.sampleRate || 44100,
-      });
-
-      setCleanedAudio(null);
-      Alert.alert('Success', 'Audio extracted and ready to play!');
-    } catch (err: any) {
-      console.error('Audio extraction error:', err);
-      Alert.alert('Error', err?.message || 'Failed to extract audio');
-    } finally {
-      setIsExtracting(false);
-    }
-  };
-
-  const handleCleanAudio = async (): Promise<void> => {
-    if (!extractedAudio?.path) {
-      return Alert.alert('No Audio', 'Please extract audio first.');
-    }
-
-    setIsCleaning(true);
-    try {
-      const inputPath = extractedAudio.path;
-      const timestamp = Date.now();
-      const outputPath = inputPath.replace('.m4a', `_cleaned_${timestamp}.m4a`);
-
-      const cleanedPath = await AudioProcessor.cleanAudio(
-        inputPath,
-        outputPath,
-      );
-
-      setCleanedAudio({
-        ...extractedAudio,
-        path: cleanedPath,
-        size: extractedAudio.size,
-      });
-
-      Alert.alert('Success', 'Audio cleaned and saved!');
-    } catch (err: any) {
-      console.error('Audio cleaning error:', err);
-      Alert.alert('Error', err?.message || 'Failed to clean audio');
-    } finally {
-      setIsCleaning(false);
+    } catch (error) {
+      console.error('Error picking media:', error);
+      Alert.alert('Error', 'Failed to select media');
     }
   };
 
   const handlePickLivePhoto = async (): Promise<void> => {
-    // Check compatibility before proceeding
     if (deviceCompatibility && !deviceCompatibility.isSupported) {
       Alert.alert(
         'Device Not Supported',
@@ -232,14 +149,22 @@ const Home = (): ReactElement => {
   const proceedWithLivePhoto = async (): Promise<void> => {
     setIsProcessingLivePhoto(true);
     try {
+      // Check if LivePhotoManager module exists
+      if (!LivePhotoManager) {
+        throw new Error('LivePhotoManager module is not available');
+      }
+
       Alert.alert(
         'Live Transcription',
         'You will have 5 seconds to speak after selecting a Live Photo for transcription.',
         [{ text: 'OK', style: 'default' }],
       );
 
+      // Call the native module method - it should return a Promise
       const result: LivePhotoResult = await LivePhotoManager.pickLivePhoto();
-      setLivePhotoResult(result);
+
+      // Navigate to Video screen with Live Photo result
+      navigation.navigate('Video', { livePhotoResult: result });
 
       Alert.alert(
         'Success',
@@ -261,15 +186,38 @@ const Home = (): ReactElement => {
     }
   };
 
-  // Helper function to get compatibility status icon and color
   const getCompatibilityStatus = () => {
+    if (isCheckingCompatibility) {
+      return {
+        icon: '❓',
+        color: '#999',
+        text: 'Checking...',
+        statusStyle: styles.statusChecking,
+      };
+    }
+
     if (!deviceCompatibility) {
-      return { icon: '❓', color: '#999', text: 'Checking...' };
+      return {
+        icon: '❓',
+        color: '#999',
+        text: 'Unknown',
+        statusStyle: styles.statusChecking,
+      };
     }
 
     return deviceCompatibility.isSupported
-      ? { icon: '✅', color: '#4CAF50', text: 'Supported' }
-      : { icon: '⚠️', color: '#FF9800', text: 'Limited Support' };
+      ? {
+          icon: '✅',
+          color: '#4CAF50',
+          text: 'Fully Supported',
+          statusStyle: styles.statusSupported,
+        }
+      : {
+          icon: '⚠️',
+          color: '#FF9800',
+          text: 'Limited Support',
+          statusStyle: styles.statusLimited,
+        };
   };
 
   const compatibilityStatus = getCompatibilityStatus();
@@ -283,21 +231,28 @@ const Home = (): ReactElement => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {/* Header Section */}
           <View style={styles.header}>
             <Text style={styles.headerTitle}>LivePhoto</Text>
             <Text style={styles.headerSubtitle}>
               Capture moments, explore details
             </Text>
 
-            {/* Device Compatibility Status */}
+            {/* Enhanced Device Compatibility Status */}
             <TouchableOpacity
-              style={styles.compatibilityBadge}
+              style={[styles.compatibilityBadge, styles.shadowLarge]}
               onPress={() =>
                 deviceCompatibility &&
                 showCompatibilityDetails(deviceCompatibility)
               }
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
+              <View
+                style={[
+                  styles.statusIndicator,
+                  compatibilityStatus.statusStyle,
+                ]}
+              />
               <Text style={styles.compatibilityIcon}>
                 {compatibilityStatus.icon}
               </Text>
@@ -312,171 +267,81 @@ const Home = (): ReactElement => {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.actionContainer}>
+          {/* Action Buttons Container */}
+          <View style={[styles.actionContainer, styles.actionContainerLarge]}>
             <Components.ActionButton
               icon="📷"
               title="Gallery"
               subtitle="Choose from photos & videos"
-              onPress={() =>
-                handlePickMedia('gallery', setMedia, setExtractedAudio)
+              onPress={() => handleMediaSelection('gallery')}
+              style={
+                !isProcessingLivePhoto ? undefined : styles.actionButtonDisabled
               }
+              disabled={isProcessingLivePhoto}
             />
+
             <Components.ActionButton
               icon="📸"
               title="Camera"
               subtitle="Take a new photo/video"
-              onPress={() =>
-                handlePickMedia('camera', setMedia, setExtractedAudio)
+              onPress={() => handleMediaSelection('camera')}
+              style={
+                !isProcessingLivePhoto ? undefined : styles.actionButtonDisabled
               }
+              disabled={isProcessingLivePhoto}
             />
+
+            <Components.ActionButton
+              icon="🎥"
+              title="Record Video"
+              subtitle="Capture a new video"
+              onPress={() => handleMediaSelection('record')}
+              style={
+                !isProcessingLivePhoto ? undefined : styles.actionButtonDisabled
+              }
+              disabled={isProcessingLivePhoto}
+            />
+
             <Components.ActionButton
               icon="🖼️"
-              title="Pick Live Photo"
+              title="Live Photo"
               subtitle={
                 deviceCompatibility?.isSupported
                   ? 'Extract audio & transcription'
+                  : isCheckingCompatibility
+                  ? 'Checking device compatibility...'
                   : 'Limited device support'
               }
               onPress={handlePickLivePhoto}
               disabled={isCheckingCompatibility || isProcessingLivePhoto}
+              style={
+                isCheckingCompatibility || isProcessingLivePhoto
+                  ? styles.actionButtonDisabled
+                  : undefined
+              }
             />
           </View>
-
-          <View style={styles.mediaDetailsContainer}>
-            <Components.MediaDetails
-              media={media}
-              clearMedia={clearMedia}
-              renderMediaPreview={renderMediaPreview}
-            />
-          </View>
-
-          {media && isVideo(media.mime) && (
-            <TouchableOpacity
-              style={[
-                styles.extractButton,
-                isExtracting && styles.extractButtonDisabled,
-              ]}
-              onPress={handleExtractAudio}
-              disabled={isExtracting}
-              activeOpacity={0.8}
-            >
-              <View style={styles.extractButtonContent}>
-                <Text style={styles.extractButtonIcon}>🎵</Text>
-                <Text style={styles.extractButtonText}>
-                  {isExtracting ? 'Extracting...' : 'Extract Audio'}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          )}
-
-          {extractedAudio && !cleanedAudio && (
-            <TouchableOpacity
-              style={[
-                styles.extractButton,
-                isCleaning && styles.extractButtonDisabled,
-              ]}
-              onPress={handleCleanAudio}
-              disabled={isCleaning}
-              activeOpacity={0.8}
-            >
-              <View style={styles.extractButtonContent}>
-                <Text style={styles.extractButtonIcon}>✨</Text>
-                <Text style={styles.extractButtonText}>
-                  {isCleaning ? 'Cleaning...' : 'Clean Audio'}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          )}
-
-          {cleanedAudio && (
-            <TouchableOpacity
-              style={[
-                styles.extractButton,
-                isCleaning && styles.extractButtonDisabled,
-              ]}
-              onPress={handleCleanAudio}
-              disabled={isCleaning}
-              activeOpacity={0.8}
-            >
-              <View style={styles.extractButtonContent}>
-                <Text style={styles.extractButtonIcon}>🔄</Text>
-                <Text style={styles.extractButtonText}>
-                  {isCleaning ? 'Re-cleaning...' : 'Clean Again'}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          )}
-
-          {extractedAudio && (
-            <View style={styles.audioPlayerContainer}>
-              <Text style={styles.audioTitle}>Original Extracted Audio:</Text>
-              <Components.AudioExtractor extractedAudio={extractedAudio} />
-            </View>
-          )}
-
-          {cleanedAudio && (
-            <View style={styles.audioPlayerContainer}>
-              <Text style={styles.audioTitle}>Cleaned Audio:</Text>
-              <Components.AudioExtractor extractedAudio={cleanedAudio} />
-            </View>
-          )}
-
-          {livePhotoResult && (
-            <View style={styles.livePhotoContainer}>
-              <Text style={styles.livePhotoLabel}>Original Photo:</Text>
-              <Image
-                source={{ uri: 'file://' + livePhotoResult.photo }}
-                style={styles.livePhotoImage}
-                resizeMode="cover"
-              />
-
-              <Text style={styles.livePhotoLabel}>
-                Extracted/Cleaned Audio:
-              </Text>
-              <Components.AudioExtractor
-                extractedAudio={{
-                  path: livePhotoResult.audio,
-                  size: 0,
-                  duration: 0,
-                  format: 'm4a',
-                  sampleRate: 44100,
-                }}
-              />
-
-              <Text style={styles.livePhotoLabel}>Transcription:</Text>
-              <Text style={styles.livePhotoText}>
-                {livePhotoResult.transcription || 'No transcription available'}
-              </Text>
-
-              <Text style={styles.livePhotoLabel}>Original Video:</Text>
-              <Video
-                source={{ uri: 'file://' + livePhotoResult.video }}
-                style={styles.livePhotoVideo}
-                controls
-                paused
-              />
-            </View>
-          )}
-
-          {(isExtracting ||
-            isCleaning ||
-            isProcessingLivePhoto ||
-            isCheckingCompatibility) && (
-            <View style={styles.loadingOverlay}>
-              <Text style={styles.loadingText}>
-                {isExtracting
-                  ? 'Extracting audio...'
-                  : isCleaning
-                  ? 'Cleaning audio...'
-                  : isProcessingLivePhoto
-                  ? 'Processing Live Photo...'
-                  : 'Checking device compatibility...'}
-              </Text>
-            </View>
-          )}
 
           <View style={styles.bottomSpacing} />
         </ScrollView>
+
+        {/* Enhanced Loading Overlay */}
+        {(isProcessingLivePhoto || isCheckingCompatibility) && (
+          <View style={styles.loadingOverlay}>
+            <View style={styles.centerContent}>
+              <ActivityIndicator
+                size="large"
+                color={Colors.white}
+                style={styles.loadingSpinner}
+              />
+              <Text style={styles.loadingText}>
+                {isProcessingLivePhoto
+                  ? 'Processing Live Photo...\nPlease wait'
+                  : 'Checking Compatibility...\nThis may take a moment'}
+              </Text>
+            </View>
+          </View>
+        )}
       </SafeAreaView>
     </>
   );

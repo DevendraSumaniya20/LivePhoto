@@ -3,23 +3,27 @@ import {
   requestCameraPermission,
   requestPhotoLibraryPermission,
 } from './permissions';
-import { pickFromCamera, pickFromGallery, PickedMedia } from './mediaPicker';
+import {
+  pickFromCamera,
+  pickFromGallery,
+  recordVideo,
+  PickedMedia,
+} from './mediaPicker';
 
 export const handlePickMedia = async (
-  type: 'camera' | 'gallery',
-  setMedia: (media: PickedMedia | null) => void,
-  setExtractedAudio: (audio: any) => void,
-): Promise<void> => {
+  type: 'camera' | 'gallery' | 'record',
+): Promise<PickedMedia | null> => {
   try {
     let picked: PickedMedia | null = null;
 
     if (type === 'gallery') {
       const perm = await requestPhotoLibraryPermission();
       if (!perm.granted) {
-        return Alert.alert(
+        Alert.alert(
           'Permission Required',
           'Please grant photo library access.',
         );
+        return null;
       }
       picked = await pickFromGallery();
     }
@@ -27,20 +31,25 @@ export const handlePickMedia = async (
     if (type === 'camera') {
       const perm = await requestCameraPermission();
       if (!perm.granted) {
-        return Alert.alert(
-          'Permission Required',
-          'Please grant camera access.',
-        );
+        Alert.alert('Permission Required', 'Please grant camera access.');
+        return null;
       }
       picked = await pickFromCamera();
     }
 
-    if (picked) {
-      setMedia(picked);
-      setExtractedAudio(null);
+    if (type === 'record') {
+      const perm = await requestCameraPermission();
+      if (!perm.granted) {
+        Alert.alert('Permission Required', 'Please grant camera access.');
+        return null;
+      }
+      picked = await recordVideo();
     }
+
+    return picked;
   } catch (err) {
     console.error('Error picking media:', err);
     Alert.alert('Error', 'Something went wrong while picking media.');
+    return null;
   }
 };

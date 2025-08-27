@@ -11,6 +11,8 @@
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		D048476CEB56DD3D7FA3C394 /* libPods-LivePhoto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 750950466282D79379F559F5 /* libPods-LivePhoto.a */; };
+		E4A594312E5ED1DC00DD48EE /* AudioModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4A5942F2E5ED1DC00DD48EE /* AudioModule.swift */; };
+		E4A594322E5ED1DC00DD48EE /* AudioModule.m in Sources */ = {isa = PBXBuildFile; fileRef = E4A5942E2E5ED1DC00DD48EE /* AudioModule.m */; };
 		E4C220952E5C837300C861E9 /* AudioExtractorModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C220942E5C837300C861E9 /* AudioExtractorModule.swift */; };
 		E4C220982E5C83AF00C861E9 /* AudioExtractor.m in Sources */ = {isa = PBXBuildFile; fileRef = E4C220972E5C83AF00C861E9 /* AudioExtractor.m */; };
 		F55DEBF6E285149446B97B29 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
@@ -27,6 +29,8 @@
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = LivePhoto/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = LivePhoto/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		E418B19E2E5DA97E00D37FC0 /* Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Header.h; sourceTree = "<group>"; };
+		E4A5942E2E5ED1DC00DD48EE /* AudioModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AudioModule.m; sourceTree = "<group>"; };
+		E4A5942F2E5ED1DC00DD48EE /* AudioModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioModule.swift; sourceTree = "<group>"; };
 		E4C220942E5C837300C861E9 /* AudioExtractorModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioExtractorModule.swift; sourceTree = "<group>"; };
 		E4C220972E5C83AF00C861E9 /* AudioExtractor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AudioExtractor.m; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -112,6 +116,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				E4A594302E5ED1DC00DD48EE /* Audio */,
 				E418B19F2E5DAC8600D37FC0 /* LivePhotoModule */,
 				E418B19E2E5DA97E00D37FC0 /* Header.h */,
 				E418B1962E5D94A500D37FC0 /* AudioProcessor */,
@@ -142,6 +147,15 @@
 				13E37AED0F75BD865E3B799F /* Pods-LivePhoto.release.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		E4A594302E5ED1DC00DD48EE /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				E4A5942E2E5ED1DC00DD48EE /* AudioModule.m */,
+				E4A5942F2E5ED1DC00DD48EE /* AudioModule.swift */,
+			);
+			path = Audio;
 			sourceTree = "<group>";
 		};
 		E4C220912E5C830900C861E9 /* AudioExtractor */ = {
@@ -269,9 +283,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -286,9 +304,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -303,6 +325,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				E4C220982E5C83AF00C861E9 /* AudioExtractor.m in Sources */,
+				E4A594312E5ED1DC00DD48EE /* AudioModule.swift in Sources */,
+				E4A594322E5ED1DC00DD48EE /* AudioModule.m in Sources */,
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
 				E4C220952E5C837300C861E9 /* AudioExtractorModule.swift in Sources */,
 			);
