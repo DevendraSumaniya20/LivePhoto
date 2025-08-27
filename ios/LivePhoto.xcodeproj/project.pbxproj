@@ -13,8 +13,6 @@
 		D048476CEB56DD3D7FA3C394 /* libPods-LivePhoto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 750950466282D79379F559F5 /* libPods-LivePhoto.a */; };
 		E4A594312E5ED1DC00DD48EE /* AudioModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4A5942F2E5ED1DC00DD48EE /* AudioModule.swift */; };
 		E4A594322E5ED1DC00DD48EE /* AudioModule.m in Sources */ = {isa = PBXBuildFile; fileRef = E4A5942E2E5ED1DC00DD48EE /* AudioModule.m */; };
-		E4C220952E5C837300C861E9 /* AudioExtractorModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C220942E5C837300C861E9 /* AudioExtractorModule.swift */; };
-		E4C220982E5C83AF00C861E9 /* AudioExtractor.m in Sources */ = {isa = PBXBuildFile; fileRef = E4C220972E5C83AF00C861E9 /* AudioExtractor.m */; };
 		F55DEBF6E285149446B97B29 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
@@ -31,20 +29,10 @@
 		E418B19E2E5DA97E00D37FC0 /* Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Header.h; sourceTree = "<group>"; };
 		E4A5942E2E5ED1DC00DD48EE /* AudioModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AudioModule.m; sourceTree = "<group>"; };
 		E4A5942F2E5ED1DC00DD48EE /* AudioModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioModule.swift; sourceTree = "<group>"; };
-		E4C220942E5C837300C861E9 /* AudioExtractorModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioExtractorModule.swift; sourceTree = "<group>"; };
-		E4C220972E5C83AF00C861E9 /* AudioExtractor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AudioExtractor.m; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		E418B1992E5D94CD00D37FC0 /* Exceptions for "AudioProcessor" folder in "LivePhoto" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				AudioProcessor.m,
-				AudioProcessor.swift,
-			);
-			target = 13B07F861A680F5B00A75B9A /* LivePhoto */;
-		};
 		E418B1A22E5DACAB00D37FC0 /* Exceptions for "LivePhotoModule" folder in "LivePhoto" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -55,14 +43,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		E418B1962E5D94A500D37FC0 /* AudioProcessor */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				E418B1992E5D94CD00D37FC0 /* Exceptions for "AudioProcessor" folder in "LivePhoto" target */,
-			);
-			path = AudioProcessor;
-			sourceTree = "<group>";
-		};
 		E418B19F2E5DAC8600D37FC0 /* LivePhotoModule */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -119,8 +99,6 @@
 				E4A594302E5ED1DC00DD48EE /* Audio */,
 				E418B19F2E5DAC8600D37FC0 /* LivePhotoModule */,
 				E418B19E2E5DA97E00D37FC0 /* Header.h */,
-				E418B1962E5D94A500D37FC0 /* AudioProcessor */,
-				E4C220912E5C830900C861E9 /* AudioExtractor */,
 				13B07FAE1A68108700A75B9A /* LivePhoto */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
@@ -156,15 +134,6 @@
 				E4A5942F2E5ED1DC00DD48EE /* AudioModule.swift */,
 			);
 			path = Audio;
-			sourceTree = "<group>";
-		};
-		E4C220912E5C830900C861E9 /* AudioExtractor */ = {
-			isa = PBXGroup;
-			children = (
-				E4C220942E5C837300C861E9 /* AudioExtractorModule.swift */,
-				E4C220972E5C83AF00C861E9 /* AudioExtractor.m */,
-			);
-			path = AudioExtractor;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -283,13 +252,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -304,13 +269,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-LivePhoto/Pods-LivePhoto-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -324,11 +285,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E4C220982E5C83AF00C861E9 /* AudioExtractor.m in Sources */,
 				E4A594312E5ED1DC00DD48EE /* AudioModule.swift in Sources */,
 				E4A594322E5ED1DC00DD48EE /* AudioModule.m in Sources */,
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
-				E4C220952E5C837300C861E9 /* AudioExtractorModule.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

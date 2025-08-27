@@ -250,7 +250,7 @@ class LivePhotoManager: NSObject, PHPickerViewControllerDelegate {
       return
     }
     
-    let outputURL = createTemporaryURL(with: "livephoto", extension: "mov")
+    let outputURL = createTemporaryURL(with: "live_photo", extension: "mov")
     
     let options = PHAssetResourceRequestOptions()
     options.isNetworkAccessAllowed = true
@@ -350,7 +350,7 @@ class LivePhotoManager: NSObject, PHPickerViewControllerDelegate {
     do {
       let tempFiles = try FileManager.default.contentsOfDirectory(at: tempDir, includingPropertiesForKeys: nil)
       for file in tempFiles {
-        if file.lastPathComponent.contains("livephoto") || 
+        if file.lastPathComponent.contains("live_photo") || 
            file.lastPathComponent.contains("extracted_audio") {
           try? FileManager.default.removeItem(at: file)
         }

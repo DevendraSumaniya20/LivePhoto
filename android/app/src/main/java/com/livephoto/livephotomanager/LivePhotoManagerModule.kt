@@ -13,6 +13,7 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
+import android.util.Size
 import com.facebook.react.bridge.*
 import java.io.File
 import java.io.FileOutputStream
@@ -179,8 +180,8 @@ class LivePhotoManagerModule(reactContext: ReactApplicationContext) :
                     return@execute
                 }
 
-                // Live mic transcription
-                val transcription = transcribeAudioFromMic()
+                // Offline transcription placeholder (no API key). Returns empty string by default.
+                val transcription = transcribeAudioOffline(audioFile)
 
                 val result = Arguments.createMap().apply {
                     putString("photo", thumbnailFile.absolutePath)
@@ -235,45 +236,141 @@ class LivePhotoManagerModule(reactContext: ReactApplicationContext) :
         }
     }
 
-    private fun extractEmbeddedVideo(imageFile: File, videoFile: File): Boolean { /* implementation same as before */ return false }
-    private fun isVideoFile(file: File): Boolean { /* implementation same as before */ return false }
-    private fun extractAudioFromVideo(videoFile: File, outputAudio: File) { /* same as before */ }
-    private fun generateThumbnailFromVideo(videoFile: File, thumbnailFile: File) { /* same as before */ }
-    private fun findCompanionVideoFile(imageFile: File, videoFile: File): Boolean { /* same as before */ return false }
+    private fun extractEmbeddedVideo(imageFile: File, videoFile: File): Boolean {
+        // Attempt Google/Pixel Motion Photo extraction by parsing XMP to find MicroVideoOffset
+        return try {
+            val bytes = imageFile.readBytes()
+            val xmp = extractXmpXml(bytes) ?: return false
+            val offset = parseMicroVideoOffset(xmp) ?: return false
+            if (offset <= 0 || offset >= bytes.size) return false
 
-    // Live mic transcription using SpeechRecognizer
-    private fun transcribeAudioFromMic(): String {
-        var transcription = ""
-        val recognizer = SpeechRecognizer.createSpeechRecognizer(reactApplicationContext)
-        val listener = object : RecognitionListener {
-            override fun onReadyForSpeech(params: Bundle?) {}
-            override fun onBeginningOfSpeech() {}
-            override fun onRmsChanged(rmsdB: Float) {}
-            override fun onBufferReceived(buffer: ByteArray?) {}
-            override fun onEndOfSpeech() {}
-            override fun onError(error: Int) { Log.e(TAG, "SpeechRecognizer error: $error") }
-            override fun onResults(results: Bundle?) {
-                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                transcription = matches?.joinToString(" ") ?: ""
+            // Copy MP4 bytes from offset to end
+            if (videoFile.exists()) videoFile.delete()
+            videoFile.outputStream().use { out ->
+                out.write(bytes, offset.toInt(), bytes.size - offset.toInt())
             }
-            override fun onPartialResults(partialResults: Bundle?) {}
-            override fun onEvent(eventType: Int, params: Bundle?) {}
+            true
+        } catch (_: Exception) {
+            false
         }
+    }
 
-        recognizer.setRecognitionListener(listener)
+    private fun isVideoFile(file: File): Boolean {
+        val name = file.name.lowercase()
+        return name.endsWith(".mp4") || name.endsWith(".mov") || name.endsWith(".3gp") || name.endsWith(".mkv")
+    }
 
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US")
-            putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, reactApplicationContext.packageName)
+    private fun extractAudioFromVideo(videoFile: File, outputAudio: File) {
+        val extractor = MediaExtractor()
+        var muxer: MediaMuxer? = null
+        try {
+            extractor.setDataSource(videoFile.absolutePath)
+            var audioTrackIndex = -1
+            for (i in 0 until extractor.trackCount) {
+                val format = extractor.getTrackFormat(i)
+                val mime = format.getString(MediaFormat.KEY_MIME)
+                if (mime != null && mime.startsWith("audio/")) {
+                    audioTrackIndex = i
+                    extractor.selectTrack(i)
+                    break
+                }
+            }
+            if (audioTrackIndex == -1) throw RuntimeException("No audio track found")
+
+            if (outputAudio.exists()) outputAudio.delete()
+            muxer = MediaMuxer(outputAudio.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+            val dstIndex = muxer.addTrack(extractor.getTrackFormat(audioTrackIndex))
+            muxer.start()
+
+            val buffer = ByteBuffer.allocate(1 * 1024 * 1024)
+            val info = MediaCodec.BufferInfo()
+            while (true) {
+                val sampleSize = extractor.readSampleData(buffer, 0)
+                if (sampleSize < 0) break
+                info.offset = 0
+                info.size = sampleSize
+                info.flags = extractor.sampleFlags
+                info.presentationTimeUs = extractor.sampleTime
+                muxer.writeSampleData(dstIndex, buffer, info)
+                extractor.advance()
+            }
+        } finally {
+            try { muxer?.stop(); muxer?.release() } catch (_: Exception) {}
+            extractor.release()
         }
+    }
 
-        recognizer.startListening(intent)
-        Thread.sleep(5000) // simple example: listen for 5 seconds
-        recognizer.stopListening()
-        recognizer.destroy()
+    private fun generateThumbnailFromVideo(videoFile: File, thumbnailFile: File) {
+        try {
+            val bitmap: Bitmap? = if (Build.VERSION.SDK_INT >= 29) {
+                ThumbnailUtils.createVideoThumbnail(videoFile, Size(512, 512), null)
+            } else {
+                ThumbnailUtils.createVideoThumbnail(videoFile.absolutePath, MediaStore.Video.Thumbnails.MINI_KIND)
+            }
+            if (bitmap != null) {
+                FileOutputStream(thumbnailFile).use { out ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
+                }
+            }
+        } catch (_: Exception) { }
+    }
 
-        return transcription
+    private fun findCompanionVideoFile(imageFile: File, videoFile: File): Boolean {
+        val dir = imageFile.parentFile ?: return false
+        val base = imageFile.nameWithoutExtension
+        val candidates = listOf("$base.mp4", "$base.mov")
+        for (name in candidates) {
+            val candidate = File(dir, name)
+            if (candidate.exists()) {
+                candidate.copyTo(videoFile, overwrite = true)
+                return true
+            }
+        }
+        return false
+    }
+
+    // --- XMP helpers for Google Motion Photos ---
+    private fun extractXmpXml(data: ByteArray): String? {
+        // XMP is between <x:xmpmeta ...> and </x:xmpmeta>
+        val xmlStart = "<x:xmpmeta".toByteArray()
+        val xmlEnd = "</x:xmpmeta>".toByteArray()
+        val start = indexOf(data, xmlStart, 0)
+        if (start == -1) return null
+        val end = indexOf(data, xmlEnd, start)
+        if (end == -1) return null
+        val endInclusive = end + xmlEnd.size
+        return try {
+            String(data.copyOfRange(start, endInclusive))
+        } catch (_: Exception) { null }
+    }
+
+    private fun parseMicroVideoOffset(xmpXml: String): Long? {
+        // Look for GCamera:MicroVideoOffset or Container:Item based offsets
+        val regex = Regex("MicroVideoOffset\\s*" +
+                "=\\s*\"(\\d+)\"|<GCamera:MicroVideoOffset>(\\d+)</GCamera:MicroVideoOffset>")
+        val match = regex.find(xmpXml) ?: return null
+        val value = match.groupValues.drop(1).firstOrNull { it.isNotEmpty() } ?: return null
+        return value.toLongOrNull()
+    }
+
+    private fun indexOf(data: ByteArray, pattern: ByteArray, from: Int): Int {
+        if (pattern.isEmpty()) return -1
+        var i = from
+        outer@ while (i <= data.size - pattern.size) {
+            var j = 0
+            while (j < pattern.size) {
+                if (data[i + j] != pattern[j]) { i++; continue@outer }
+                j++
+            }
+            return i
+        }
+        return -1
+    }
+
+    // Offline file-based transcription stub (no API key). Replace with on-device model if desired.
+    private fun transcribeAudioOffline(audioFile: File): String {
+        // No network, no API key. Return empty or integrate an on-device model later.
+        return ""
     }
 }
 

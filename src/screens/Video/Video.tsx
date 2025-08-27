@@ -188,6 +188,37 @@ const VideoScreen = (): ReactElement => {
             </Text>
           </View>
 
+          {/* Live Photo Result Display */}
+          {!media && livePhotoResult && (
+            <>
+              <View style={styles.mediaDetailsContainer}>
+                <Text style={styles.headerSubtitle}>Live Photo Output</Text>
+                <Image
+                  source={{ uri: `file://${livePhotoResult.photo}` }}
+                  style={styles.preview}
+                  resizeMode="cover"
+                />
+                {livePhotoResult.video ? (
+                  <Video
+                    source={{ uri: `file://${livePhotoResult.video}` }}
+                    style={[styles.preview, { marginTop: 10 }]}
+                    controls
+                    paused
+                    resizeMode="cover"
+                  />
+                ) : null}
+                {livePhotoResult.transcription?.length ? (
+                  <View style={{ marginTop: 12 }}>
+                    <Text style={styles.headerSubtitle}>Transcription</Text>
+                    <Text style={{ color: Colors.white }}>
+                      {livePhotoResult.transcription}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+            </>
+          )}
+
           {/* Regular Media Display */}
           {media && (
             <>

@@ -3,7 +3,6 @@ import { moderateScale } from '../../constants/responsive';
 import Colors from '../../constants/color';
 
 const styles = StyleSheet.create({
-  // Safe area & scroll
   safeArea: {
     flex: 1,
     backgroundColor: Colors.black,
@@ -17,8 +16,6 @@ const styles = StyleSheet.create({
     paddingTop: moderateScale(20),
     paddingBottom: moderateScale(40),
   },
-
-  // Header Section
   header: {
     alignItems: 'center',
     marginBottom: moderateScale(40),
@@ -40,8 +37,6 @@ const styles = StyleSheet.create({
     marginBottom: moderateScale(16),
     letterSpacing: moderateScale(0.5),
   },
-
-  // Compatibility Badge
   compatibilityBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -66,17 +61,27 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: moderateScale(0.3),
   },
-
-  // Action Buttons Container
   actionContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'stretch',
-    gap: moderateScale(20),
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
     paddingVertical: moderateScale(20),
   },
+  actionButtonWrapper: {
+    width: '48%',
+    marginBottom: moderateScale(12),
+    marginRight: '4%',
+  },
+  actionContainerLarge: {
+    maxWidth: moderateScale(400),
+    alignSelf: 'center',
 
-  // Loading Overlay
+    width: '100%',
+  },
+  actionButtonDisabled: {
+    opacity: 0.4,
+    transform: [{ scale: 0.95 }],
+  },
   loadingOverlay: {
     position: 'absolute',
     top: 0,
@@ -99,25 +104,13 @@ const styles = StyleSheet.create({
   loadingSpinner: {
     marginBottom: moderateScale(16),
   },
-
-  // Bottom Spacing
   bottomSpacing: {
     height: moderateScale(20),
   },
-
-  // Action Button Disabled State (for ActionButton component)
-  actionButtonDisabled: {
-    opacity: 0.4,
-    transform: [{ scale: 0.95 }],
-  },
-
-  // Additional utility styles
   centerContent: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  // Gradient background overlay (if needed)
   gradientOverlay: {
     position: 'absolute',
     top: 0,
@@ -126,8 +119,6 @@ const styles = StyleSheet.create({
     height: moderateScale(200),
     opacity: 0.1,
   },
-
-  // Enhanced shadow for important elements
   shadowLarge: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
@@ -135,15 +126,6 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 10,
   },
-
-  // Responsive action container for different screen sizes
-  actionContainerLarge: {
-    maxWidth: moderateScale(400),
-    alignSelf: 'center',
-    width: '100%',
-  },
-
-  // Status indicator styles
   statusIndicator: {
     width: moderateScale(12),
     height: moderateScale(12),
