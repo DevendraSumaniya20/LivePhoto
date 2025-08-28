@@ -50,7 +50,6 @@ const styles = StyleSheet.create({
   // Media preview
   mediaDetailsContainer: {
     width: '100%',
-    // alignItems: 'center',
     marginBottom: moderateScale(20),
   },
   preview: {
@@ -116,43 +115,104 @@ const styles = StyleSheet.create({
 
   // Live Photo container
   livePhotoContainer: {
-    width: '90%',
-    marginTop: moderateScale(20),
-    padding: moderateScale(20),
-    backgroundColor: Colors.black50,
-    borderRadius: moderateScale(15),
+    flex: 1,
+    paddingHorizontal: moderateScale(20),
+    paddingVertical: moderateScale(10),
+  },
+  livePhotoHeader: {
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
+    marginBottom: moderateScale(20),
+    paddingVertical: moderateScale(15),
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray300,
   },
-  livePhotoLabel: {
-    color: Colors.white,
+  livePhotoTitle: {
+    fontSize: moderateScale(24),
     fontWeight: 'bold',
-    fontSize: moderateScale(16),
-    marginBottom: moderateScale(8),
+    color: Colors.white,
     textAlign: 'center',
   },
-  livePhotoText: {
-    color: Colors.white,
+  livePhotoSubtitle: {
     fontSize: moderateScale(14),
-    marginBottom: moderateScale(15),
+    color: Colors.gray300,
     textAlign: 'center',
-    lineHeight: moderateScale(20),
+    marginTop: moderateScale(5),
+  },
+  livePhotoSection: {
+    marginBottom: moderateScale(25),
+    backgroundColor: Colors.black50,
+    borderRadius: moderateScale(12),
+    padding: moderateScale(15),
+  },
+  sectionTitle: {
+    fontSize: moderateScale(18),
+    fontWeight: '600',
+    color: Colors.white,
+    marginBottom: moderateScale(12),
+  },
+  livePhotoImageContainer: {
+    alignItems: 'center',
+    borderRadius: moderateScale(8),
+    overflow: 'hidden',
   },
   livePhotoImage: {
-    width: '90%',
-    height: moderateScale(250),
-    marginBottom: moderateScale(15),
-    borderRadius: moderateScale(12),
+    borderRadius: moderateScale(8),
+    backgroundColor: Colors.black,
+  },
+  livePhotoVideoContainer: {
+    alignItems: 'center',
+    borderRadius: moderateScale(8),
+    overflow: 'hidden',
   },
   livePhotoVideo: {
-    width: '90%',
-    height: moderateScale(200),
-    borderRadius: moderateScale(12),
+    borderRadius: moderateScale(8),
+    backgroundColor: Colors.black,
+  },
+
+  // Play Button
+  playButton: {
     marginTop: moderateScale(10),
+    backgroundColor: Colors.primaryDark,
+    paddingHorizontal: moderateScale(20),
+    paddingVertical: moderateScale(10),
+    borderRadius: moderateScale(20),
+  },
+  playButtonText: {
+    color: Colors.white,
+    fontSize: moderateScale(14),
+    fontWeight: '600',
+  },
+
+  // Audio info
+  audioInfoContainer: {
+    backgroundColor: Colors.black,
+    padding: moderateScale(12),
+    borderRadius: moderateScale(8),
+  },
+  audioInfo: {
+    color: Colors.gray300,
+    fontSize: moderateScale(12),
+    fontFamily: 'monospace',
+  },
+
+  // Transcription Container
+  transcriptionContainer: {
+    backgroundColor: Colors.black,
+    padding: moderateScale(15),
+    borderRadius: moderateScale(8),
+    minHeight: moderateScale(60),
+  },
+  transcriptionText: {
+    color: Colors.white,
+    fontSize: moderateScale(16),
+    lineHeight: moderateScale(24),
+    textAlign: 'left',
+  },
+  noTranscriptionText: {
+    color: Colors.gray300,
+    fontSize: moderateScale(14),
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
 
   // Loading overlay
@@ -198,39 +258,160 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
 
-  // Play Button Overlay
-  playButton: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    width: moderateScale(70),
-    height: moderateScale(70),
-    borderRadius: moderateScale(35),
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    transform: [
-      { translateX: -moderateScale(35) },
-      { translateY: -moderateScale(35) },
-    ],
-    borderWidth: 3,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
-  },
-  playButtonText: {
-    fontSize: moderateScale(24),
-    color: Colors.white,
+  // Live Photo Player
+  livePhotoPlayerContainer: {
+    position: 'relative',
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: '#000000',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
 
-  // Transcription Container
-  transcriptionContainer: {
-    width: '90%',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: moderateScale(12),
-    padding: moderateScale(16),
-    marginTop: moderateScale(8),
-    marginBottom: moderateScale(16),
-    borderLeftWidth: moderateScale(4),
-    borderLeftColor: '#007AFF',
+  livePhotoBadge: {
+    position: 'absolute',
+    top: 15,
+    left: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+
+  livePhotoBadgeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#000000',
+    letterSpacing: 0.5,
+  },
+
+  // Controls Overlay
+  controlsOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 20,
+    alignItems: 'center',
+  },
+
+  playPauseButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+
+  playPauseButtonText: {
+    fontSize: 24,
+  },
+
+  progressContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+
+  progressBar: {
+    width: '100%',
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 2,
+    marginBottom: 8,
+  },
+
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 2,
+  },
+
+  timeText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontFamily: 'monospace',
+  },
+
+  // Tap to Play
+  tapToPlayContainer: {
+    position: 'absolute',
+    bottom: 15,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+
+  tapToPlayText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    overflow: 'hidden',
+  },
+
+  // Media Information
+  mediaInfoContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 15,
+    padding: 20,
+  },
+
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+
+  infoLabel: {
+    fontSize: 16,
+    color: '#CCCCCC',
+    fontWeight: '500',
+    flex: 1,
+  },
+
+  infoValue: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '400',
+    flex: 2,
+    textAlign: 'right',
+  },
+
+  // File Information
+  fileInfoContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 15,
+    padding: 20,
+  },
+
+  fileInfoRow: {
+    marginBottom: 15,
+  },
+
+  fileLabel: {
+    fontSize: 16,
+    color: '#CCCCCC',
+    fontWeight: '600',
+    marginBottom: 5,
+  },
+
+  filePath: {
+    fontSize: 12,
+    color: '#999999',
+    fontFamily: 'monospace',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    padding: 10,
+    borderRadius: 8,
+    lineHeight: 16,
   },
 });
 

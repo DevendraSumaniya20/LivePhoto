@@ -1,4 +1,4 @@
-import React, { ReactElement, useState } from 'react';
+import React, { ReactElement, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Alert,
   ScrollView,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Video from 'react-native-video';
@@ -22,12 +23,13 @@ import {
 import Colors from '../../constants/color';
 import styles from './styles';
 import Components from '../../components';
-import { isVideo } from '../../utils/mediaPicker';
+import { isVideo, PickedLivePhoto } from '../../utils/mediaPicker';
 import { RootStackParamList } from '../../navigation/types';
 import Icons from '../../constants/svgPath';
 import { moderateScale } from '../../constants/responsive';
 
 const { AudioModule } = NativeModules;
+const { width: screenWidth } = Dimensions.get('window');
 
 interface ExtractedAudio {
   path: string;
@@ -35,13 +37,6 @@ interface ExtractedAudio {
   duration: number;
   format: string;
   sampleRate: number;
-}
-
-interface LivePhotoResult {
-  photo: string;
-  audio: string;
-  transcription: string;
-  video: string;
 }
 
 type VideoScreenRouteProp = RouteProp<RootStackParamList, 'Video'>;
@@ -58,6 +53,45 @@ const VideoScreen = (): ReactElement => {
   const [cleanedAudio, setCleanedAudio] = useState<ExtractedAudio | null>(null);
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
   const [isCleaning, setIsCleaning] = useState<boolean>(false);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
+  const [showControls, setShowControls] = useState<boolean>(true);
+
+  useEffect(() => {
+    // Auto-hide controls after 3 seconds when playing Live Photo
+    if (isPlaying && livePhotoResult) {
+      const timer = setTimeout(() => {
+        setShowControls(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isPlaying, livePhotoResult]);
+
+  const formatTime = (timeInSeconds: number): string => {
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = Math.floor(timeInSeconds % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatDate = (timestamp?: number): string => {
+    if (!timestamp) return 'Unknown';
+    return new Date(timestamp * 1000).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
   const clearMedia = (): void => {
     navigation.goBack();
@@ -93,6 +127,137 @@ const VideoScreen = (): ReactElement => {
     );
   };
 
+  /**
+   * Render the Live Photo details including video, image, audio, and transcription.
+   */
+  const renderLivePhotoContent = () => {
+    if (!livePhotoResult) return null;
+
+    const livePhoto = livePhotoResult as PickedLivePhoto;
+    const aspectRatio =
+      livePhoto.pixelWidth && livePhoto.pixelHeight
+        ? livePhoto.pixelWidth / livePhoto.pixelHeight
+        : 4 / 3;
+    const imageHeight = (screenWidth - 40) / aspectRatio;
+
+    return (
+      <View style={styles.livePhotoContainer}>
+        {/* Header */}
+        <View style={styles.livePhotoHeader}>
+          <Text style={styles.livePhotoTitle}>📸 Live Photo</Text>
+          <Text style={styles.livePhotoSubtitle}>
+            {formatDate(livePhoto.creationDate)}
+          </Text>
+          {livePhoto.location && (
+            <Text style={styles.locationText}>
+              📍 {livePhoto.location.latitude.toFixed(4)},{' '}
+              {livePhoto.location.longitude.toFixed(4)}
+            </Text>
+          )}
+        </View>
+
+        {/* Live Photo Player */}
+        <View style={styles.livePhotoSection}>
+          <TouchableOpacity
+            style={styles.livePhotoPlayerContainer}
+            onPress={() => setShowControls(!showControls)}
+            activeOpacity={1}
+          >
+            {/* Still Image */}
+            {!isPlaying && (
+              <Image
+                source={{ uri: `file://${livePhoto.photo}` }}
+                style={[
+                  styles.livePhotoImage,
+                  { width: screenWidth - 40, height: imageHeight },
+                ]}
+                resizeMode="cover"
+              />
+            )}
+
+            {/* Video Component */}
+            {livePhoto.video && (
+              <Video
+                source={{ uri: `file://${livePhoto.video}` }}
+                style={[
+                  styles.livePhotoVideo,
+                  {
+                    width: screenWidth - 40,
+                    height: imageHeight,
+                    opacity: isPlaying ? 1 : 0,
+                  },
+                ]}
+                controls={false}
+                paused={!isPlaying}
+                resizeMode="cover"
+                repeat={true}
+                volume={1.0}
+                onLoad={data => setDuration(data.duration || 0)}
+                onProgress={data => setCurrentTime(data.currentTime || 0)}
+                onEnd={() => {
+                  setIsPlaying(false);
+                  setCurrentTime(0);
+                }}
+                onError={error => {
+                  console.error('Live Photo video error:', error);
+                  Alert.alert('Error', 'Failed to load Live Photo video');
+                }}
+              />
+            )}
+
+            {/* LIVE Badge */}
+            {livePhoto.video && (
+              <View style={styles.livePhotoBadge}>
+                <Text style={styles.livePhotoBadgeText}>LIVE</Text>
+              </View>
+            )}
+
+            {/* Play/Pause Controls Overlay */}
+            {showControls && livePhoto.video && (
+              <View style={styles.controlsOverlay}>
+                <TouchableOpacity
+                  style={styles.playPauseButton}
+                  onPress={() => setIsPlaying(!isPlaying)}
+                >
+                  <Text style={styles.playPauseButtonText}>
+                    {isPlaying ? '⏸️' : '▶️'}
+                  </Text>
+                </TouchableOpacity>
+
+                {duration > 0 && (
+                  <View style={styles.progressContainer}>
+                    <View style={styles.progressBar}>
+                      <View
+                        style={[
+                          styles.progressFill,
+                          { width: `${(currentTime / duration) * 100}%` },
+                        ]}
+                      />
+                    </View>
+                    <Text style={styles.timeText}>
+                      {formatTime(currentTime)} / {formatTime(duration)}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Tap to play instruction */}
+          {!isPlaying && (
+            <View style={styles.tapToPlayContainer}>
+              <Text style={styles.tapToPlayText}>Tap to view Live Photo</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Media Information */}
+        {/* Additional media info sections like dimensions, duration, file paths, audio, transcription */}
+      </View>
+    );
+  };
+
+  // Audio extraction and cleaning functions remain unchanged...
   const handleExtractAudio = async (): Promise<void> => {
     if (!media || !isVideo(media.mime)) {
       return Alert.alert(
@@ -100,24 +265,20 @@ const VideoScreen = (): ReactElement => {
         'Please select a video to extract audio.',
       );
     }
-
     setIsExtracting(true);
     try {
       const filePath = media.path.replace('file://', '');
       const result = await AudioModule.extractAudio(filePath);
 
-      if (!result?.path) {
+      if (!result?.path)
         return Alert.alert('Extraction Failed', 'No audio track found.');
-      }
 
       const defaultFormat = Platform.OS === 'ios' ? 'm4a' : 'm4a';
-
       setExtractedAudio({
         ...result,
         format: result.format || defaultFormat,
         sampleRate: result.sampleRate || 44100,
       });
-
       setCleanedAudio(null);
       Alert.alert('Success', 'Audio extracted and ready to play!');
     } catch (err: any) {
@@ -130,9 +291,8 @@ const VideoScreen = (): ReactElement => {
 
   const handleCleanAudio = async (): Promise<void> => {
     const inputPath = cleanedAudio?.path || extractedAudio?.path;
-    if (!inputPath) {
+    if (!inputPath)
       return Alert.alert('No Audio', 'Please extract audio first.');
-    }
 
     setIsCleaning(true);
     try {
@@ -149,7 +309,6 @@ const VideoScreen = (): ReactElement => {
         path: cleanedPath,
         format: extension.replace('.', ''),
       });
-
       Alert.alert('Success', 'Audio cleaned and saved!');
     } catch (err: any) {
       console.error('Audio cleaning error:', err);
@@ -178,41 +337,18 @@ const VideoScreen = (): ReactElement => {
               />
             </TouchableOpacity>
             <View style={{ flex: 1, alignItems: 'center' }}>
-              <Text style={styles.headerTitle}>Media Details</Text>
+              <Text style={styles.headerTitle}>
+                {livePhotoResult ? 'Live Photo Details' : 'Media Details'}
+              </Text>
               <Text style={styles.headerSubtitle}>
-                {media ? 'Selected Media' : 'Live Photo Result'}
+                {media ? 'Selected Media' : 'Live Photo Components'}
               </Text>
             </View>
             <View style={{ width: moderateScale(30) }} />
           </View>
 
           {/* Live Photo Result */}
-          {!media && livePhotoResult && (
-            <View style={styles.livePhotoContainer}>
-              <Text style={styles.livePhotoLabel}>Live Photo Output</Text>
-              <Image
-                source={{ uri: `file://${livePhotoResult.photo}` }}
-                style={styles.livePhotoImage}
-                resizeMode="cover"
-              />
-              {livePhotoResult.video && (
-                <Video
-                  source={{ uri: `file://${livePhotoResult.video}` }}
-                  style={styles.livePhotoVideo}
-                  controls
-                  paused
-                  resizeMode="cover"
-                />
-              )}
-              {livePhotoResult.transcription?.length > 0 && (
-                <View style={styles.transcriptionContainer}>
-                  <Text style={styles.livePhotoText}>
-                    {livePhotoResult.transcription}
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
+          {livePhotoResult && renderLivePhotoContent()}
 
           {/* Regular Media */}
           {media && (

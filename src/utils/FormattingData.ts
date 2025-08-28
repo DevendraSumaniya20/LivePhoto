@@ -58,7 +58,8 @@ const formatTime = (seconds: number): string => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-const formatResolution = (width: number, height: number): string => {
+const formatResolution = (width?: number, height?: number): string => {
+  if (!width || !height) return 'Unknown';
   const megapixels = (width * height) / 1000000;
   if (megapixels >= 1) {
     return `${width} × ${height}\n(${megapixels.toFixed(1)}MP)`;

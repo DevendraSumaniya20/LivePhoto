@@ -32,21 +32,10 @@
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		E418B1A22E5DACAB00D37FC0 /* Exceptions for "LivePhotoModule" folder in "LivePhoto" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				LivePhotoManagerModule.swift,
-			);
-			target = 13B07F861A680F5B00A75B9A /* LivePhoto */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		E418B19F2E5DAC8600D37FC0 /* LivePhotoModule */ = {
+		E4BBB1F22E60539C00EF1449 /* LivePhotoModule */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				E418B1A22E5DACAB00D37FC0 /* Exceptions for "LivePhotoModule" folder in "LivePhoto" target */,
 			);
 			path = LivePhotoModule;
 			sourceTree = "<group>";
@@ -97,7 +86,7 @@
 			isa = PBXGroup;
 			children = (
 				E4A594302E5ED1DC00DD48EE /* Audio */,
-				E418B19F2E5DAC8600D37FC0 /* LivePhotoModule */,
+				E4BBB1F22E60539C00EF1449 /* LivePhotoModule */,
 				E418B19E2E5DA97E00D37FC0 /* Header.h */,
 				13B07FAE1A68108700A75B9A /* LivePhoto */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
@@ -154,6 +143,9 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				E4BBB1F22E60539C00EF1449 /* LivePhotoModule */,
 			);
 			name = LivePhoto;
 			productName = LivePhoto;

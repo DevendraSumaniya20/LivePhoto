@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { isVideo, PickedMedia } from '../utils/mediaPicker';
+import { isVideo, PickedLivePhoto, PickedMedia } from '../utils/mediaPicker';
 import {
   formatFileSize,
   formatResolution,
@@ -26,7 +26,7 @@ import { getGradientProps } from '../utils/gradients';
 import Icons from '../constants/svgPath';
 
 type MediaDetailsProps = {
-  media: PickedMedia | null;
+  media: PickedMedia | PickedLivePhoto | null;
   clearMedia: () => void;
   renderMediaPreview: () => React.ReactNode;
 };
@@ -92,9 +92,11 @@ const MediaDetails: React.FC<MediaDetailsProps> = ({
             </View>
             <View style={styles.quickInfoItem}>
               <Text style={styles.quickInfoLabel}>Resolution</Text>
-              <Text style={styles.quickInfoValue}>
-                {formatResolution(media.width, media.height)}
-              </Text>
+              {media.width != null && media.height != null && (
+                <Text style={styles.quickInfoValue}>
+                  {formatResolution(media.width, media.height)}
+                </Text>
+              )}
             </View>
             <View style={styles.quickInfoItem}>
               <Text style={styles.quickInfoLabel}>Format</Text>
@@ -117,10 +119,12 @@ const MediaDetails: React.FC<MediaDetailsProps> = ({
       </TouchableOpacity>
       {showDetails && (
         <View style={styles.detailsCard}>
-          <Components.DetailRow label="File Path" value={media.path} />
-          {media.filename && (
-            <Components.DetailRow label="Filename" value={media.filename} />
+          <Components.DetailRow label="File Path" value={media.path ?? 'N/A'} />
+
+          {media.path && (
+            <Components.DetailRow label="File Path" value={media.path} />
           )}
+
           {media.localIdentifier && (
             <Components.DetailRow
               label="Local Identifier"

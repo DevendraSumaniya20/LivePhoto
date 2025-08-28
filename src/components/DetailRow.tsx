@@ -5,7 +5,7 @@ import Colors from '../constants/color';
 
 type DetailRowProps = {
   label: string;
-  value: string;
+  value?: string;
 };
 
 const DetailRow: React.FC<DetailRowProps> = ({ label, value }) => {
@@ -13,7 +13,7 @@ const DetailRow: React.FC<DetailRowProps> = ({ label, value }) => {
     <View style={styles.detailRow}>
       <Text style={styles.detailLabel}>{label}</Text>
       <Text style={styles.detailValue} numberOfLines={3}>
-        {value}
+        {value ?? 'N/A'}
       </Text>
     </View>
   );
