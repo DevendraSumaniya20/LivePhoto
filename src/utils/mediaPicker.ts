@@ -11,6 +11,7 @@ import { PickedLivePhoto, PickedMedia } from '../navigation/types';
 
 const { LivePhotoManager } = NativeModules;
 
+// --- Helpers ---
 export const isVideo = (mime?: string) =>
   typeof mime === 'string' && mime.startsWith('video/');
 
@@ -19,6 +20,15 @@ export const isLivePhoto = (
 ): media is PickedLivePhoto =>
   !!(media as PickedLivePhoto).photo && !!(media as PickedLivePhoto).video;
 
+export const getMediaType = (
+  media: PickedMedia | PickedLivePhoto,
+): 'livephoto' | 'video' | 'image' => {
+  if (isLivePhoto(media)) return 'livephoto';
+  if (isVideo((media as PickedMedia).mime)) return 'video';
+  return 'image';
+};
+
+// --- Base picker options ---
 const baseOptions: Options = {
   cropping: false,
   includeBase64: false,
@@ -28,6 +38,7 @@ const baseOptions: Options = {
   forceJpg: false,
 };
 
+// --- Map ImagePicker result to PickedMedia ---
 const mapToPicked = (media: ImageOrVideo): PickedMedia => ({
   path: media.path,
   localIdentifier: (media as any).localIdentifier,
@@ -45,7 +56,7 @@ const mapToPicked = (media: ImageOrVideo): PickedMedia => ({
   modificationDate: (media as any).modificationDate,
 });
 
-// Gallery / Camera / Record
+// --- Pickers ---
 export const pickFromGallery = async (): Promise<PickedMedia | null> => {
   try {
     const media = await ImagePicker.openPicker({
@@ -79,29 +90,27 @@ export const recordVideo = async (): Promise<PickedMedia | null> => {
   }
 };
 
-// Live Photo picker
+// --- Live Photo picker (iOS only) ---
 export const pickLivePhoto = async (): Promise<PickedLivePhoto | null> => {
+  if (Platform.OS !== 'ios') {
+    Alert.alert('Not Supported', 'Live Photos are only supported on iOS.');
+    return null;
+  }
+
+  if (!LivePhotoManager?.pickLivePhoto) {
+    Alert.alert('Error', 'LivePhotoManager native module not available.');
+    return null;
+  }
+
   try {
-    if (Platform.OS !== 'ios') {
-      Alert.alert('Not Supported', 'Live Photos are only supported on iOS.');
-      return null;
-    }
+    await LivePhotoManager.checkDeviceCompatibility();
+  } catch {
+    Alert.alert('Error', 'Device not compatible with Live Photos.');
+    return null;
+  }
 
-    if (!LivePhotoManager?.pickLivePhoto) {
-      Alert.alert('Error', 'LivePhotoManager native module not available.');
-      return null;
-    }
-
-    // Check device compatibility first
-    try {
-      await LivePhotoManager.checkDeviceCompatibility();
-    } catch (error) {
-      Alert.alert('Error', 'Device not compatible with Live Photos.');
-      return null;
-    }
-
+  try {
     const result = await LivePhotoManager.pickLivePhoto();
-
     if (!result?.photo || !result?.video) {
       Alert.alert('Error', 'Failed to extract Live Photo components.');
       return null;
@@ -110,36 +119,28 @@ export const pickLivePhoto = async (): Promise<PickedLivePhoto | null> => {
     return {
       photo: String(result.photo),
       video: String(result.video),
-      audio: result.audio || undefined,
-      transcription: result.transcription || undefined,
-      localIdentifier: result.localIdentifier || undefined,
-      creationDate: result.creationDate || undefined,
-      modificationDate: result.modificationDate || undefined,
-      location: result.location || undefined,
-      duration: result.duration || undefined,
-      pixelWidth: result.pixelWidth || undefined,
-      pixelHeight: result.pixelHeight || undefined,
+      audio: result.audio ?? undefined,
+      transcription: result.transcription ?? undefined,
+      localIdentifier: result.localIdentifier ?? undefined,
+      creationDate: result.creationDate ?? undefined,
+      modificationDate: result.modificationDate ?? undefined,
+      location: result.location ?? undefined,
+      duration: result.duration ?? undefined,
+      pixelWidth: result.pixelWidth ?? undefined,
+      pixelHeight: result.pixelHeight ?? undefined,
     } as PickedLivePhoto;
   } catch (error: any) {
     console.error('Live Photo picker error:', error);
-
     if (error.code === 'PERMISSION_DENIED') {
-      Alert.alert(
-        'Permission Required',
-        'Please grant photo library access to use Live Photos.',
-      );
-    } else if (error.code === 'NO_SELECTION') {
-      // User cancelled, don't show error
-      return null;
-    } else {
+      Alert.alert('Permission Required', 'Please grant photo library access.');
+    } else if (error.code !== 'NO_SELECTION') {
       Alert.alert('Error', error.message || 'Failed to pick Live Photo.');
     }
-
     return null;
   }
 };
 
-// Main handler - UPDATED to properly handle Live Photos
+// --- Main handler ---
 export const handlePickMedia = async (
   type: 'camera' | 'gallery' | 'record' | 'livephoto',
 ): Promise<PickedMedia | PickedLivePhoto | null> => {
@@ -153,22 +154,28 @@ export const handlePickMedia = async (
         );
         return null;
       }
-      return await pickFromGallery();
-    } else if (type === 'camera') {
+      return pickFromGallery();
+    }
+
+    if (type === 'camera') {
       const perm = await requestCameraPermission();
       if (!perm.granted) {
         Alert.alert('Permission Required', 'Please grant camera access.');
         return null;
       }
-      return await pickFromCamera();
-    } else if (type === 'record') {
+      return pickFromCamera();
+    }
+
+    if (type === 'record') {
       const perm = await requestCameraPermission();
       if (!perm.granted) {
         Alert.alert('Permission Required', 'Please grant camera access.');
         return null;
       }
-      return await recordVideo();
-    } else if (type === 'livephoto') {
+      return recordVideo();
+    }
+
+    if (type === 'livephoto') {
       const perm = await requestPhotoLibraryPermission();
       if (!perm.granted) {
         Alert.alert(
@@ -177,7 +184,7 @@ export const handlePickMedia = async (
         );
         return null;
       }
-      return await pickLivePhoto();
+      return pickLivePhoto();
     }
 
     return null;

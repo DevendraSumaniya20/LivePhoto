@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { isVideo, PickedLivePhoto, PickedMedia } from '../utils/mediaPicker';
+
 import {
   formatFileSize,
   formatResolution,
@@ -23,6 +23,8 @@ import { moderateHeight, moderateScale, scale } from '../constants/responsive';
 import LinearGradient from 'react-native-linear-gradient';
 import { getGradientProps } from '../utils/gradients';
 import Icons from '../constants/svgPath';
+import { PickedLivePhoto, PickedMedia } from '../navigation/types';
+import { isVideo } from '../utils/mediaPicker';
 
 type MediaDetailsProps = {
   media: PickedMedia | PickedLivePhoto | null;

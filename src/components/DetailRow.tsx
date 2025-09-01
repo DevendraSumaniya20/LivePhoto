@@ -1,4 +1,11 @@
-import { StyleSheet, Text, View } from 'react-native';
+import {
+  StyleProp,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+  TextStyle,
+} from 'react-native';
 import React from 'react';
 import { moderateScale } from '../constants/responsive';
 import Colors from '../constants/color';
@@ -6,13 +13,22 @@ import Colors from '../constants/color';
 type DetailRowProps = {
   label: string;
   value?: string;
+  style?: StyleProp<ViewStyle>; // container style
+  labelStyle?: StyleProp<TextStyle>; // label text style
+  valueStyle?: StyleProp<TextStyle>; // value text style
 };
 
-const DetailRow: React.FC<DetailRowProps> = ({ label, value }) => {
+const DetailRow: React.FC<DetailRowProps> = ({
+  label,
+  value,
+  style,
+  labelStyle,
+  valueStyle,
+}) => {
   return (
-    <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={styles.detailValue} numberOfLines={3}>
+    <View style={[styles.detailRow, style]}>
+      <Text style={[styles.detailLabel, labelStyle]}>{label}</Text>
+      <Text style={[styles.detailValue, valueStyle]} numberOfLines={3}>
         {value ?? 'N/A'}
       </Text>
     </View>
