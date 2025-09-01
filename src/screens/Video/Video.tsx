@@ -23,11 +23,18 @@ import {
 import Colors from '../../constants/color';
 import styles from './styles';
 import Components from '../../components';
-import { isVideo, PickedLivePhoto } from '../../utils/mediaPicker';
-import { RootStackParamList } from '../../navigation/types';
+
+import { PickedLivePhoto, RootStackParamList } from '../../navigation/types';
 import Icons from '../../constants/svgPath';
 import { moderateScale } from '../../constants/responsive';
 import { formatDate, formatTime } from '../../utils/FormattingData';
+import { isVideo } from '../../utils/mediaPicker';
+import LinearGradient from 'react-native-linear-gradient';
+import { getGradientProps } from '../../utils/gradients';
+import {
+  previewContainerStyle,
+  previewMediaStyle,
+} from '../../constants/styles';
 
 const { AudioModule } = NativeModules;
 const { width: screenWidth } = Dimensions.get('window');
@@ -58,6 +65,7 @@ const VideoScreen = (): ReactElement => {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [showControls, setShowControls] = useState<boolean>(true);
+  const [gradientProps] = useState(() => getGradientProps());
 
   useEffect(() => {
     // Auto-hide controls after 3 seconds when playing Live Photo
@@ -80,15 +88,19 @@ const VideoScreen = (): ReactElement => {
       return (
         <Video
           source={{ uri: media.path }}
-          style={styles.preview}
-          controls
-          paused
-          resizeMode="contain"
+          style={previewMediaStyle}
+          resizeMode="cover"
           repeat={false}
-          volume={1.0}
-          onError={err => {
-            console.error('Video playback error:', err);
-            Alert.alert('Error', 'Failed to load video');
+          controls={true}
+          paused={true}
+          onLoad={data => {
+            setDuration(data.duration);
+          }}
+          onProgress={data => {
+            setCurrentTime(data.currentTime);
+          }}
+          onEnd={() => {
+            setCurrentTime(0);
           }}
         />
       );
@@ -97,15 +109,12 @@ const VideoScreen = (): ReactElement => {
     return (
       <Image
         source={{ uri: media.path }}
-        style={styles.preview}
-        resizeMode="contain"
+        style={previewMediaStyle}
+        resizeMode="cover"
       />
     );
   };
 
-  /**
-   * Render the Live Photo details including video, image, audio, and transcription.
-   */
   const renderLivePhotoContent = () => {
     if (!livePhotoResult) return null;
 
@@ -122,7 +131,9 @@ const VideoScreen = (): ReactElement => {
         <View style={styles.livePhotoHeader}>
           <Text style={styles.livePhotoTitle}>📸 Live Photo</Text>
           <Text style={styles.livePhotoSubtitle}>
-            {formatDate(livePhoto.creationDate)}
+            {livePhoto.creationDate
+              ? formatDate(parseInt(livePhoto.creationDate) * 1000)
+              : ''}
           </Text>
           {livePhoto.location && (
             <Text style={styles.locationText}>
@@ -133,109 +144,46 @@ const VideoScreen = (): ReactElement => {
         </View>
 
         {/* Live Photo Player */}
-        <View style={styles.livePhotoSection}>
-          <TouchableOpacity
-            style={styles.livePhotoPlayerContainer}
-            onPress={() => setShowControls(!showControls)}
-            activeOpacity={1}
-          >
-            {/* Still Image */}
-            {!isPlaying && (
-              <Image
-                source={{ uri: `file://${livePhoto.photo}` }}
-                style={[
-                  styles.livePhotoImage,
-                  { width: screenWidth - 40, height: imageHeight },
-                ]}
-                resizeMode="cover"
-              />
-            )}
-
-            {/* Video Component */}
-            {livePhoto.video && (
-              <Video
-                source={{ uri: `file://${livePhoto.video}` }}
-                style={[
-                  styles.livePhotoVideo,
-                  {
-                    width: screenWidth - 40,
-                    height: imageHeight,
-                    opacity: isPlaying ? 1 : 0,
-                  },
-                ]}
-                controls={false}
-                paused={!isPlaying}
-                resizeMode="cover"
-                repeat={true}
-                volume={1.0}
-                onLoad={data => setDuration(data.duration || 0)}
-                onProgress={data => setCurrentTime(data.currentTime || 0)}
-                onEnd={() => {
-                  setIsPlaying(false);
-                  setCurrentTime(0);
-                }}
-                onError={error => {
-                  console.error('Live Photo video error:', error);
-                  Alert.alert('Error', 'Failed to load Live Photo video');
-                }}
-              />
-            )}
-
-            {/* LIVE Badge */}
-            {livePhoto.video && (
-              <View style={styles.livePhotoBadge}>
-                <Text style={styles.livePhotoBadgeText}>LIVE</Text>
-              </View>
-            )}
-
-            {/* Play/Pause Controls Overlay */}
-            {showControls && livePhoto.video && (
-              <View style={styles.controlsOverlay}>
-                <TouchableOpacity
-                  style={styles.playPauseButton}
-                  onPress={() => setIsPlaying(!isPlaying)}
-                >
-                  <Text style={styles.playPauseButtonText}>
-                    {isPlaying ? '⏸️' : '▶️'}
-                  </Text>
-                </TouchableOpacity>
-
-                {duration > 0 && (
-                  <View style={styles.progressContainer}>
-                    <View style={styles.progressBar}>
-                      <View
-                        style={[
-                          styles.progressFill,
-                          { width: `${(currentTime / duration) * 100}%` },
-                        ]}
-                      />
-                    </View>
-                    <Text style={styles.timeText}>
-                      {formatTime(currentTime)} / {formatTime(duration)}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
-          </TouchableOpacity>
-
-          {/* Tap to play instruction */}
+        <View
+          style={[
+            previewContainerStyle,
+            livePhoto.pixelWidth && livePhoto.pixelHeight
+              ? { aspectRatio: livePhoto.pixelWidth / livePhoto.pixelHeight }
+              : { height: moderateScale(200) },
+          ]}
+        >
           {!isPlaying && (
-            <View style={styles.tapToPlayContainer}>
-              <Text style={styles.tapToPlayText}>Tap to view Live Photo</Text>
-            </View>
+            <Image
+              source={{ uri: `file://${livePhoto.photo}` }}
+              style={previewMediaStyle}
+              resizeMode="cover"
+            />
+          )}
+
+          {livePhoto.video && (
+            <Video
+              source={{ uri: `file://${livePhoto.video}` }}
+              style={previewMediaStyle}
+              paused={!isPlaying}
+              resizeMode="cover"
+              repeat
+              controls={showControls}
+              onLoad={() => setIsPlaying(true)}
+              onEnd={() => {
+                setIsPlaying(false);
+                setShowControls(true);
+              }}
+              onTouchStart={() => setShowControls(true)}
+            />
           )}
         </View>
-
-        {/* Media Information */}
-        {/* Additional media info sections like dimensions, duration, file paths, audio, transcription */}
       </View>
     );
   };
 
   // Audio extraction and cleaning functions remain unchanged...
   const handleExtractAudio = async (): Promise<void> => {
-    if (!media || !isVideo(media.mime)) {
+    if (!media?.path || !isVideo(media.mime)) {
       return Alert.alert(
         'Invalid Media',
         'Please select a video to extract audio.',
@@ -297,111 +245,115 @@ const VideoScreen = (): ReactElement => {
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor={Colors.black} />
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Icons.LeftArrow
-                height={moderateScale(30)}
-                width={moderateScale(30)}
-                stroke={Colors.white}
-                fill={Colors.white}
-              />
-            </TouchableOpacity>
-            <View style={{ flex: 1, alignItems: 'center' }}>
-              <Text style={styles.headerTitle}>
-                {livePhotoResult ? 'Live Photo Details' : 'Media Details'}
-              </Text>
-              <Text style={styles.headerSubtitle}>
-                {media ? 'Selected Media' : 'Live Photo Components'}
-              </Text>
+      <LinearGradient {...gradientProps} style={styles.safeArea}>
+        <SafeAreaView style={styles.safeArea}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <Icons.LeftArrow
+                  height={moderateScale(30)}
+                  width={moderateScale(30)}
+                  stroke={Colors.white}
+                  fill={Colors.white}
+                />
+              </TouchableOpacity>
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <Text style={styles.headerTitle}>
+                  {livePhotoResult ? 'Live Photo Details' : 'Media Details'}
+                </Text>
+                <Text style={styles.headerSubtitle}>
+                  {media ? 'Selected Media' : 'Live Photo Components'}
+                </Text>
+              </View>
+              <View style={{ width: moderateScale(30) }} />
             </View>
-            <View style={{ width: moderateScale(30) }} />
-          </View>
 
-          {/* Live Photo Result */}
-          {livePhotoResult && renderLivePhotoContent()}
+            {/* Live Photo Result */}
+            {livePhotoResult && renderLivePhotoContent()}
 
-          {/* Regular Media */}
-          {media && (
-            <View style={styles.mediaDetailsContainer}>
-              {/* Media Preview */}
-              <Components.MediaDetails
-                media={media}
-                clearMedia={clearMedia}
-                renderMediaPreview={renderMediaPreview}
-              />
+            {/* Regular Media */}
+            {media && (
+              <View style={styles.mediaDetailsContainer}>
+                {/* Media Preview */}
+                <Components.MediaDetails
+                  media={media}
+                  clearMedia={clearMedia}
+                  renderMediaPreview={renderMediaPreview}
+                />
 
-              {/* Extract Audio Button */}
-              {isVideo(media.mime) && (
-                <TouchableOpacity
-                  style={[
-                    styles.extractButton,
-                    isExtracting && styles.extractButtonDisabled,
-                  ]}
-                  onPress={handleExtractAudio}
-                  disabled={isExtracting}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.extractButtonContent}>
-                    <Text style={styles.extractButtonText}>
-                      {isExtracting ? 'Extracting...' : '🎵 Extract Audio'}
+                {/* Extract Audio Button */}
+                {isVideo(media.mime) && (
+                  <TouchableOpacity
+                    style={[
+                      styles.extractButton,
+                      isExtracting && styles.extractButtonDisabled,
+                    ]}
+                    onPress={handleExtractAudio}
+                    disabled={isExtracting}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.extractButtonContent}>
+                      <Text style={styles.extractButtonText}>
+                        {isExtracting ? 'Extracting...' : '🎵 Extract Audio'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+
+                {/* Clean Audio Button */}
+                {extractedAudio && (
+                  <TouchableOpacity
+                    style={[
+                      styles.extractButton,
+                      isCleaning && styles.extractButtonDisabled,
+                    ]}
+                    onPress={handleCleanAudio}
+                    disabled={isCleaning}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.extractButtonContent}>
+                      <Text style={styles.extractButtonText}>
+                        {isCleaning
+                          ? cleanedAudio
+                            ? 'Re-cleaning...'
+                            : 'Cleaning...'
+                          : cleanedAudio
+                          ? '🔄 Clean Again'
+                          : '✨ Clean Audio'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+
+                {/* Audio Players */}
+                {extractedAudio && (
+                  <View style={styles.audioPlayerContainer}>
+                    <Text style={styles.audioTitle}>
+                      🎵 Extracted Audio ({Platform.OS.toUpperCase()})
                     </Text>
+                    <Components.AudioExtractor
+                      extractedAudio={extractedAudio}
+                    />
                   </View>
-                </TouchableOpacity>
-              )}
+                )}
 
-              {/* Clean Audio Button */}
-              {extractedAudio && (
-                <TouchableOpacity
-                  style={[
-                    styles.extractButton,
-                    isCleaning && styles.extractButtonDisabled,
-                  ]}
-                  onPress={handleCleanAudio}
-                  disabled={isCleaning}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.extractButtonContent}>
-                    <Text style={styles.extractButtonText}>
-                      {isCleaning
-                        ? cleanedAudio
-                          ? 'Re-cleaning...'
-                          : 'Cleaning...'
-                        : cleanedAudio
-                        ? '🔄 Clean Again'
-                        : '✨ Clean Audio'}
+                {cleanedAudio && (
+                  <View style={styles.audioPlayerContainer}>
+                    <Text style={styles.audioTitle}>
+                      ✨ Cleaned Audio ({Platform.OS.toUpperCase()})
                     </Text>
+                    <Components.AudioExtractor extractedAudio={cleanedAudio} />
                   </View>
-                </TouchableOpacity>
-              )}
-
-              {/* Audio Players */}
-              {extractedAudio && (
-                <View style={styles.audioPlayerContainer}>
-                  <Text style={styles.audioTitle}>
-                    🎵 Extracted Audio ({Platform.OS.toUpperCase()})
-                  </Text>
-                  <Components.AudioExtractor extractedAudio={extractedAudio} />
-                </View>
-              )}
-
-              {cleanedAudio && (
-                <View style={styles.audioPlayerContainer}>
-                  <Text style={styles.audioTitle}>
-                    ✨ Cleaned Audio ({Platform.OS.toUpperCase()})
-                  </Text>
-                  <Components.AudioExtractor extractedAudio={cleanedAudio} />
-                </View>
-              )}
-            </View>
-          )}
-        </ScrollView>
-      </SafeAreaView>
+                )}
+              </View>
+            )}
+          </ScrollView>
+        </SafeAreaView>
+      </LinearGradient>
     </>
   );
 };

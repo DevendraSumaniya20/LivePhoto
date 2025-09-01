@@ -48,12 +48,19 @@ export type PickedMedia = {
   modificationDate?: string;
 };
 
-// Live Photo type extending PickedMedia
 export type PickedLivePhoto = PickedMedia & {
-  photo: string;
-  video: string;
-  audio?: string;
-  transcription?: string;
+  photo: string; // the still image
+  video: string; // the video component
+  audio?: string; // optional extracted audio
+  transcription?: string; // optional transcription
+  location?: {
+    // optional location info
+    latitude: number;
+    longitude: number;
+  };
+  duration?: number; // optional duration of the live photo
+  pixelWidth?: number; // optional width of the video
+  pixelHeight?: number; // optional height of the video
 };
 
 // Navigation stack params

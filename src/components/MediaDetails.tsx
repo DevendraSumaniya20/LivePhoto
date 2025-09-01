@@ -20,11 +20,10 @@ import {
 import Components from '.';
 import Colors from '../constants/color';
 import { moderateHeight, moderateScale, scale } from '../constants/responsive';
-import LinearGradient from 'react-native-linear-gradient';
-import { getGradientProps } from '../utils/gradients';
 import Icons from '../constants/svgPath';
 import { PickedLivePhoto, PickedMedia } from '../navigation/types';
 import { isVideo } from '../utils/mediaPicker';
+import { previewContainerStyle } from '../constants/styles';
 
 type MediaDetailsProps = {
   media: PickedMedia | PickedLivePhoto | null;
@@ -37,9 +36,10 @@ const MediaDetails: React.FC<MediaDetailsProps> = ({
   clearMedia,
   renderMediaPreview,
 }) => {
-  const [showQuickInfo, setShowQuickInfo] = useState(true);
-  const [showDetails, setShowDetails] = useState(true);
-  const [showExif, setShowExif] = useState(false);
+  const [showQuickInfo, setShowQuickInfo] = useState<boolean>(true);
+  const [showDetails, setShowDetails] = useState<boolean>(true);
+  const [showExif, setShowExif] = useState<boolean>(false);
+  const [showClearBtn, setShowClearBtn] = useState<boolean>(false);
 
   if (!media) {
     return (
@@ -198,22 +198,32 @@ const MediaDetails: React.FC<MediaDetailsProps> = ({
       showsVerticalScrollIndicator={false}
     >
       {/* Media Preview */}
-      <LinearGradient {...getGradientProps()} style={styles.previewCard}>
-        <View style={styles.previewHeader}>
-          <View style={styles.mediaTypeIndicator}>
-            <Text style={styles.mediaTypeText}>
-              {isVideo(media.mime) ? 'Video' : 'Image'}
-            </Text>
-          </View>
+      <View
+        style={[
+          previewContainerStyle,
+          media.width && media.height
+            ? { aspectRatio: media.width / media.height }
+            : { height: moderateScale(200) }, // fallback height
+        ]}
+      >
+        <TouchableOpacity
+          style={{ flex: 1, width: '100%' }}
+          activeOpacity={1}
+          onPress={() => setShowClearBtn(!showClearBtn)}
+        >
+          {renderMediaPreview()}
+        </TouchableOpacity>
+
+        {showClearBtn && (
           <TouchableOpacity onPress={clearMedia} style={styles.clearBtn}>
-            <Icons.Cross height={moderateScale(18)} width={moderateScale(18)} />
+            <Icons.Cross
+              height={moderateScale(18)}
+              width={moderateScale(18)}
+              fill={Colors.white}
+            />
           </TouchableOpacity>
-        </View>
-        <View style={styles.imageContainer}>{renderMediaPreview()}</View>
-        <View style={styles.previewFooter}>
-          <Text style={styles.previewLabel}>Preview</Text>
-        </View>
-      </LinearGradient>
+        )}
+      </View>
 
       {/* Quick Info */}
       {renderToggleCard('Quick Info', showQuickInfo, () =>
@@ -247,84 +257,70 @@ export default MediaDetails;
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: 'rgba(240,240,245,1)',
   },
   contentContainer: {
-    paddingHorizontal: moderateScale(16),
-    paddingBottom: moderateScale(30),
-    paddingTop: moderateScale(10),
+    paddingHorizontal: moderateScale(4),
+    paddingBottom: moderateScale(24),
   },
-  previewCard: {
-    borderRadius: moderateScale(24),
-    padding: moderateScale(20),
-    marginBottom: moderateScale(24),
-    backgroundColor: Colors.white,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  previewHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: moderateScale(16),
-  },
-  mediaTypeIndicator: {
-    backgroundColor: Colors.primary + '20',
-    paddingHorizontal: moderateScale(12),
-    paddingVertical: moderateScale(6),
-    borderRadius: moderateScale(20),
-  },
-  mediaTypeText: {
-    fontSize: moderateScale(14),
-    fontWeight: '600',
-    color: Colors.primary,
-  },
-  clearBtn: {
-    width: moderateScale(36),
-    height: moderateScale(36),
-    borderRadius: moderateScale(18),
-    backgroundColor: Colors.primary + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  imageContainer: {
-    borderRadius: moderateScale(20),
+
+  mediaPreviewContainer: {
+    width: '100%', // Full width
+    borderRadius: moderateScale(16),
     overflow: 'hidden',
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    height: moderateHeight(35),
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: moderateScale(16),
+    marginBottom: moderateScale(12),
+    position: 'relative',
   },
-  previewFooter: {
+
+  clearBtn: {
+    position: 'absolute',
+    top: moderateScale(14),
+    right: moderateScale(8),
+    width: moderateScale(32),
+    height: moderateScale(32),
+    borderRadius: moderateScale(16),
+    backgroundColor: Colors.error + '50',
+    justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10,
   },
-  previewLabel: {
-    color: Colors.black + '80',
-    fontSize: moderateScale(14),
-    fontWeight: '600',
+
+  // Media Preview Card
+  previewCard: {
+    borderRadius: moderateScale(20),
+    marginBottom: moderateScale(20),
+    overflow: 'hidden',
   },
+
+  imageContainer: {
+    height: moderateHeight(30),
+    borderRadius: moderateScale(16),
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: moderateScale(12),
+    flex: 1,
+    backgroundColor: Colors.error,
+  },
+
+  // Card Toggle
   cardToggle: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: Colors.white,
     borderRadius: moderateScale(16),
-    padding: moderateScale(16),
-    marginBottom: moderateScale(12),
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 4,
+    padding: moderateScale(14),
+    marginBottom: moderateScale(10),
+    borderWidth: 1,
+    borderColor: '#eee',
   },
   cardToggleActive: {
     backgroundColor: '#f0f4ff',
   },
   cardTitle: {
-    fontSize: moderateScale(16),
+    fontSize: moderateScale(14),
     fontWeight: '600',
     color: Colors.black,
   },
@@ -332,22 +328,21 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   toggleArrow: {
-    fontSize: moderateScale(14),
+    fontSize: moderateScale(12),
     color: Colors.black + '80',
   },
   toggleArrowActive: {
     color: Colors.primary,
   },
+
+  // Info Card
   infoCard: {
     backgroundColor: Colors.white,
-    borderRadius: moderateScale(20),
-    padding: moderateScale(20),
-    marginBottom: moderateScale(16),
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 6,
+    borderRadius: moderateScale(16),
+    padding: moderateScale(16),
+    marginBottom: moderateScale(14),
+    borderWidth: 1,
+    borderColor: '#eee',
   },
   quickInfoGrid: {
     flexDirection: 'row',
@@ -364,67 +359,71 @@ const styles = StyleSheet.create({
     fontSize: scale(12),
     color: Colors.black + '80',
     fontWeight: '500',
-    marginBottom: moderateScale(4),
+    marginBottom: moderateScale(2),
   },
   infoValue: {
     fontSize: moderateScale(14),
-    fontWeight: '700',
+    fontWeight: '600',
     color: Colors.black,
   },
+
+  // Detailed / EXIF
   detailsContainer: { gap: moderateScale(2) },
   detailRow: {
-    paddingVertical: moderateScale(12),
+    paddingVertical: moderateScale(10),
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+    borderBottomColor: '#eee',
   },
   exifContainer: { gap: moderateScale(4) },
-  exifItem: { paddingVertical: moderateScale(12) },
+  exifItem: { paddingVertical: moderateScale(10) },
   exifKey: {
-    fontSize: moderateScale(14),
+    fontSize: moderateScale(13),
     fontWeight: '600',
     color: Colors.primary,
-    marginBottom: moderateScale(4),
+    marginBottom: moderateScale(2),
   },
   exifValue: {
-    fontSize: moderateScale(13),
+    fontSize: moderateScale(12),
     color: Colors.black + 'cc',
-    lineHeight: moderateScale(18),
+    lineHeight: moderateScale(16),
   },
   exifDivider: {
     height: 1,
-    backgroundColor: 'rgba(0,0,0,0.08)',
-    marginTop: moderateScale(12),
+    backgroundColor: '#eee',
+    marginTop: moderateScale(8),
   },
+
+  // Empty State
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: moderateScale(40),
-    paddingVertical: moderateScale(60),
+    paddingHorizontal: moderateScale(32),
+    paddingVertical: moderateScale(40),
   },
   emptyTitle: {
-    fontSize: moderateScale(28),
-    fontWeight: '800',
+    fontSize: moderateScale(24),
+    fontWeight: '700',
     color: Colors.black,
-    marginBottom: moderateScale(12),
+    marginBottom: moderateScale(8),
     textAlign: 'center',
   },
   emptySubtitle: {
-    fontSize: moderateScale(16),
+    fontSize: moderateScale(14),
     color: Colors.black + '80',
     textAlign: 'center',
-    lineHeight: moderateScale(24),
-    marginBottom: moderateScale(24),
+    lineHeight: moderateScale(20),
+    marginBottom: moderateScale(16),
   },
   emptyHint: {
-    paddingHorizontal: moderateScale(20),
-    paddingVertical: moderateScale(10),
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(8),
     backgroundColor: Colors.primary + '20',
-    borderRadius: moderateScale(25),
+    borderRadius: moderateScale(20),
   },
   emptyHintText: {
     color: Colors.primary,
-    fontSize: moderateScale(14),
+    fontSize: moderateScale(13),
     fontWeight: '600',
     textAlign: 'center',
   },
