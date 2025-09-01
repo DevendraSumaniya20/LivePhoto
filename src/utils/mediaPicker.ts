@@ -7,44 +7,9 @@ import {
   requestCameraPermission,
   requestPhotoLibraryPermission,
 } from './permissions';
+import { PickedLivePhoto, PickedMedia } from '../navigation/types';
 
 const { LivePhotoManager } = NativeModules;
-
-export type PickedMedia = {
-  path?: string;
-  localIdentifier?: string;
-  sourceURL?: string;
-  width?: number;
-  height?: number;
-  mime?: string;
-  size?: number;
-  filename?: string;
-  exif?: Record<string, unknown>;
-  duration?: number;
-  data?: string;
-  cropRect?: { width: number; height: number; x: number; y: number };
-  creationDate?: string;
-  modificationDate?: string;
-};
-
-export type PickedLivePhoto = {
-  photo: string;
-  video: string;
-  audio?: string;
-  transcription?: string;
-  localIdentifier?: string;
-  creationDate?: number;
-  modificationDate?: number;
-  location?: {
-    latitude: number;
-    longitude: number;
-    altitude: number;
-    timestamp: number;
-  };
-  duration?: number;
-  pixelWidth?: number;
-  pixelHeight?: number;
-};
 
 export const isVideo = (mime?: string) =>
   typeof mime === 'string' && mime.startsWith('video/');

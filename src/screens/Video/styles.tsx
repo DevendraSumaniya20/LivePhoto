@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 import {
   moderateHeight,
   moderateScale,
@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
   // Safe area & scroll
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.error,
   },
   scrollContainer: {
     flex: 1,
@@ -30,34 +30,26 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: Colors.white,
-    fontSize: moderateScale(28),
+    fontSize: moderateScale(18),
     fontWeight: 'bold',
     marginBottom: moderateScale(5),
     textAlign: 'center',
   },
   headerSubtitle: {
     color: Colors.white,
-    fontSize: moderateScale(16),
+    fontSize: moderateScale(14),
     opacity: 0.8,
     textAlign: 'center',
-  },
-  backButton: {
-    color: Colors.white,
-    fontSize: moderateScale(16),
-    padding: moderateScale(5),
   },
 
   // Media preview
   mediaDetailsContainer: {
-    width: '100%',
     marginBottom: moderateScale(20),
   },
   preview: {
-    width: '90%',
-    height: moderateScale(220),
+    height: moderateHeight(120),
     borderRadius: moderateScale(12),
-    backgroundColor: Colors.gray300,
-    marginVertical: moderateScale(10),
+    width: moderateWidth(120),
   },
 
   // Audio extraction buttons

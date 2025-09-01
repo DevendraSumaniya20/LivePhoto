@@ -27,6 +27,7 @@ import { isVideo, PickedLivePhoto } from '../../utils/mediaPicker';
 import { RootStackParamList } from '../../navigation/types';
 import Icons from '../../constants/svgPath';
 import { moderateScale } from '../../constants/responsive';
+import { formatDate, formatTime } from '../../utils/FormattingData';
 
 const { AudioModule } = NativeModules;
 const { width: screenWidth } = Dimensions.get('window');
@@ -67,31 +68,6 @@ const VideoScreen = (): ReactElement => {
       return () => clearTimeout(timer);
     }
   }, [isPlaying, livePhotoResult]);
-
-  const formatTime = (timeInSeconds: number): string => {
-    const minutes = Math.floor(timeInSeconds / 60);
-    const seconds = Math.floor(timeInSeconds % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const formatDate = (timestamp?: number): string => {
-    if (!timestamp) return 'Unknown';
-    return new Date(timestamp * 1000).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
 
   const clearMedia = (): void => {
     navigation.goBack();
