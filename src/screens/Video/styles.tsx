@@ -169,6 +169,46 @@ const styles = StyleSheet.create({
     color: Colors.gray300,
     fontSize: moderateScale(12),
   },
+  livePhotoButton: {
+    backgroundColor: Colors.primary,
+    marginTop: moderateScale(10),
+  },
+
+  hideLivePhotoButton: {
+    backgroundColor: Colors.error,
+    marginTop: moderateScale(8),
+  },
+
+  componentPreview: {
+    marginTop: moderateScale(20),
+    marginBottom: moderateScale(15),
+  },
+
+  componentTitle: {
+    fontSize: moderateScale(16),
+    fontWeight: '600',
+    color: Colors.white,
+    marginBottom: moderateScale(8),
+  },
+
+  componentInfo: {
+    fontSize: moderateScale(14),
+    color: Colors.gray200,
+    fontStyle: 'italic',
+  },
+
+  transcriptionContainer: {
+    marginTop: moderateScale(20),
+    padding: moderateScale(15),
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: moderateScale(8),
+  },
+
+  transcriptionText: {
+    fontSize: moderateScale(14),
+    color: Colors.white,
+    lineHeight: moderateScale(20),
+  },
 });
 
 export default styles;

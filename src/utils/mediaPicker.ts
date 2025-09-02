@@ -1,13 +1,18 @@
+import { Alert, NativeModules, Platform } from 'react-native';
 import ImagePicker, {
   ImageOrVideo,
   Options,
 } from 'react-native-image-crop-picker';
-import { Alert, Platform, NativeModules } from 'react-native';
+import {
+  PickedMedia,
+  PickedLivePhoto,
+  LivePhotoResult,
+  mapLivePhotoResultToPicked,
+} from '../navigation/types';
 import {
   requestCameraPermission,
   requestPhotoLibraryPermission,
 } from './permissions';
-import { PickedLivePhoto, PickedMedia } from '../navigation/types';
 
 const { LivePhotoManager } = NativeModules;
 
@@ -56,7 +61,7 @@ const mapToPicked = (media: ImageOrVideo): PickedMedia => ({
   modificationDate: (media as any).modificationDate,
 });
 
-// --- Pickers ---
+// --- Standard pickers ---
 export const pickFromGallery = async (): Promise<PickedMedia | null> => {
   try {
     const media = await ImagePicker.openPicker({
@@ -90,52 +95,25 @@ export const recordVideo = async (): Promise<PickedMedia | null> => {
   }
 };
 
-// --- Live Photo picker (iOS only) ---
 export const pickLivePhoto = async (): Promise<PickedLivePhoto | null> => {
   if (Platform.OS !== 'ios') {
-    Alert.alert('Not Supported', 'Live Photos are only supported on iOS.');
-    return null;
-  }
-
-  if (!LivePhotoManager?.pickLivePhoto) {
-    Alert.alert('Error', 'LivePhotoManager native module not available.');
+    Alert.alert('Not Supported', 'Live Photos are only available on iOS.');
     return null;
   }
 
   try {
-    await LivePhotoManager.checkDeviceCompatibility();
-  } catch {
-    Alert.alert('Error', 'Device not compatible with Live Photos.');
-    return null;
-  }
+    const result: LivePhotoResult = await LivePhotoManager.pickLivePhoto();
 
-  try {
-    const result = await LivePhotoManager.pickLivePhoto();
-    if (!result?.photo || !result?.video) {
-      Alert.alert('Error', 'Failed to extract Live Photo components.');
+    if (!result || !result.photo || !result.video) {
+      Alert.alert('Error', 'No Live Photo selected or incomplete.');
       return null;
     }
 
-    return {
-      photo: String(result.photo),
-      video: String(result.video),
-      audio: result.audio ?? undefined,
-      transcription: result.transcription ?? undefined,
-      localIdentifier: result.localIdentifier ?? undefined,
-      creationDate: result.creationDate ?? undefined,
-      modificationDate: result.modificationDate ?? undefined,
-      location: result.location ?? undefined,
-      duration: result.duration ?? undefined,
-      pixelWidth: result.pixelWidth ?? undefined,
-      pixelHeight: result.pixelHeight ?? undefined,
-    } as PickedLivePhoto;
-  } catch (error: any) {
-    console.error('Live Photo picker error:', error);
-    if (error.code === 'PERMISSION_DENIED') {
-      Alert.alert('Permission Required', 'Please grant photo library access.');
-    } else if (error.code !== 'NO_SELECTION') {
-      Alert.alert('Error', error.message || 'Failed to pick Live Photo.');
-    }
+    const pickedLivePhoto: PickedLivePhoto = mapLivePhotoResultToPicked(result);
+    return pickedLivePhoto;
+  } catch (err: any) {
+    console.error('pickLivePhoto error:', err);
+    Alert.alert('Error', err?.message || 'Failed to pick Live Photo.');
     return null;
   }
 };

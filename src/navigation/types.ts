@@ -1,22 +1,22 @@
-// Live Photo result passed via navigation
-export interface LivePhotoResult {
-  photo: string;
-  audio: string;
-  transcription: string;
-  video: string;
-}
-
-// Result from Live Photo picker
+// --- Result from Live Photo picker
 export type PickResult = {
   photo: string;
   video: string;
   audio?: string;
   transcription?: string;
   localIdentifier?: string;
-  creationDate?: number;
+  creationDate?: string;
+  modificationDate?: string;
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
+  duration?: number;
+  pixelWidth?: number;
+  pixelHeight?: number;
 };
 
-// Device compatibility info
+// --- Device compatibility info
 export type Compatibility = {
   isSupported: boolean;
   message: string;
@@ -30,14 +30,14 @@ export type Compatibility = {
   };
 };
 
-// Generic media type
+// --- Generic media type
 export type PickedMedia = {
   path?: string;
   localIdentifier?: string;
   sourceURL?: string;
   width?: number;
   height?: number;
-  mime?: string; // corrected typo from 'mine'
+  mime?: string;
   size?: number;
   filename?: string;
   exif?: Record<string, unknown>;
@@ -48,22 +48,59 @@ export type PickedMedia = {
   modificationDate?: string;
 };
 
+// --- Live Photo / Motion Photo type (extends media)
 export type PickedLivePhoto = PickedMedia & {
-  photo: string; // the still image
-  video: string; // the video component
-  audio?: string; // optional extracted audio
-  transcription?: string; // optional transcription
-  location?: {
-    // optional location info
-    latitude: number;
-    longitude: number;
-  };
-  duration?: number; // optional duration of the live photo
-  pixelWidth?: number; // optional width of the video
-  pixelHeight?: number; // optional height of the video
+  photo: string; // still image path
+  video: string; // video component path
+  photoMime?: string;
+  videoMime?: string;
+  audio?: string; // optional
+  transcription?: string; // optional
+  location?: { latitude: number; longitude: number; altitude?: number } | null;
+  duration?: number; // video duration in seconds
+  pixelWidth?: number;
+  pixelHeight?: number;
+  filenamePhoto?: string;
+  filenameVideo?: string;
 };
 
-// Navigation stack params
+// --- LivePhotoManager module interface
+export interface LivePhotoResult {
+  photo: string;
+  video: string;
+  audio?: string;
+  transcription?: string;
+  localIdentifier: string;
+  creationDate: number;
+  modificationDate: number;
+  location: {
+    latitude?: number;
+    longitude?: number;
+    altitude?: number;
+    timestamp?: number;
+  };
+  duration: number;
+  pixelWidth: number;
+  pixelHeight: number;
+  photoMime?: string;
+  videoMime?: string;
+  filenamePhoto?: string;
+  filenameVideo?: string;
+}
+
+export interface LivePhotoManagerInterface {
+  pickLivePhoto(): Promise<LivePhotoResult>;
+  checkDeviceCompatibility(): Promise<{
+    isSupported: boolean;
+    platform: string;
+    version: string;
+  }>;
+  testMethod(): Promise<{ status: string; timestamp: number }>;
+  showLivePhoto(localIdentifier: string): Promise<{ status: string }>;
+  hideLivePhoto(): void;
+}
+
+// --- Navigation stack params
 export type RootStackParamList = {
   Home: undefined;
   Video: {
@@ -72,9 +109,71 @@ export type RootStackParamList = {
   };
 };
 
-// Extend React Navigation types globally
+// --- Extend React Navigation types globally
 declare global {
   namespace ReactNavigation {
     interface RootParamList extends RootStackParamList {}
   }
 }
+
+// --- Mapper functions
+export const mapPickedLivePhotoToResult = (
+  picked: PickedLivePhoto,
+): LivePhotoResult => ({
+  photo: picked.photo,
+  video: picked.video,
+  audio: picked.audio,
+  transcription: picked.transcription,
+  localIdentifier: picked.localIdentifier || '',
+  creationDate: picked.creationDate
+    ? new Date(picked.creationDate).getTime()
+    : Date.now(),
+  modificationDate: picked.modificationDate
+    ? new Date(picked.modificationDate).getTime()
+    : Date.now(),
+  location: {
+    latitude: picked.location?.latitude,
+    longitude: picked.location?.longitude,
+    altitude: picked.location?.altitude ?? 0,
+    timestamp: picked.creationDate
+      ? new Date(picked.creationDate).getTime()
+      : Date.now(),
+  },
+  duration: picked.duration || 0,
+  pixelWidth: picked.pixelWidth || 0,
+  pixelHeight: picked.pixelHeight || 0,
+  photoMime: picked.photoMime,
+  videoMime: picked.videoMime,
+  filenamePhoto: picked.filenamePhoto,
+  filenameVideo: picked.filenameVideo,
+});
+
+export const mapLivePhotoResultToPicked = (
+  result: LivePhotoResult,
+): PickedLivePhoto => ({
+  photo: result.photo ?? '',
+  video: result.video ?? '',
+  audio: result.audio ?? '',
+  transcription: result.transcription ?? '',
+  localIdentifier: result.localIdentifier ?? '',
+  creationDate: result.creationDate
+    ? new Date(result.creationDate).toISOString()
+    : new Date().toISOString(),
+  modificationDate: result.modificationDate
+    ? new Date(result.modificationDate).toISOString()
+    : new Date().toISOString(),
+  location: result.location
+    ? {
+        latitude: result.location.latitude ?? 0,
+        longitude: result.location.longitude ?? 0,
+        altitude: result.location.altitude ?? 0,
+      }
+    : undefined,
+  duration: result.duration ?? 3.0,
+  pixelWidth: result.pixelWidth ?? 0,
+  pixelHeight: result.pixelHeight ?? 0,
+  photoMime: result.photoMime ?? 'image/jpeg',
+  videoMime: result.videoMime ?? 'video/quicktime',
+  filenamePhoto: result.filenamePhoto ?? 'photo.jpg',
+  filenameVideo: result.filenameVideo ?? 'video.mov',
+});

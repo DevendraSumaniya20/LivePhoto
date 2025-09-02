@@ -19,24 +19,24 @@ import {
   RouteProp,
   NavigationProp,
 } from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
 
 import Colors from '../../constants/color';
 import styles from './styles';
 import Components from '../../components';
-
-import { PickedLivePhoto, RootStackParamList } from '../../navigation/types';
 import Icons from '../../constants/svgPath';
 import { moderateScale } from '../../constants/responsive';
-import { formatDate, formatTime } from '../../utils/FormattingData';
+import { formatDate } from '../../utils/FormattingData';
 import { isVideo } from '../../utils/mediaPicker';
-import LinearGradient from 'react-native-linear-gradient';
 import { getGradientProps } from '../../utils/gradients';
+import { previewMediaStyle } from '../../constants/styles';
 import {
-  previewContainerStyle,
-  previewMediaStyle,
-} from '../../constants/styles';
+  LivePhotoResult,
+  PickedMedia,
+  RootStackParamList,
+} from '../../navigation/types';
 
-const { AudioModule } = NativeModules;
+const { AudioModule, LivePhotoManager } = NativeModules;
 const { width: screenWidth } = Dimensions.get('window');
 
 interface ExtractedAudio {
@@ -66,21 +66,64 @@ const VideoScreen = (): ReactElement => {
   const [duration, setDuration] = useState<number>(0);
   const [showControls, setShowControls] = useState<boolean>(true);
   const [gradientProps] = useState(() => getGradientProps());
+  const [isLivePhotoDisplayed, setIsLivePhotoDisplayed] =
+    useState<boolean>(false);
 
   useEffect(() => {
-    // Auto-hide controls after 3 seconds when playing Live Photo
     if (isPlaying && livePhotoResult) {
-      const timer = setTimeout(() => {
-        setShowControls(false);
-      }, 3000);
+      const timer = setTimeout(() => setShowControls(false), 3000);
       return () => clearTimeout(timer);
     }
   }, [isPlaying, livePhotoResult]);
 
+  // Clean up Live Photo display when component unmounts
+  useEffect(() => {
+    return () => {
+      if (Platform.OS === 'ios' && isLivePhotoDisplayed) {
+        LivePhotoManager?.hideLivePhoto();
+      }
+    };
+  }, [isLivePhotoDisplayed]);
+
   const clearMedia = (): void => {
+    // Hide Live Photo if displayed before going back
+    if (Platform.OS === 'ios' && isLivePhotoDisplayed) {
+      LivePhotoManager?.hideLivePhoto();
+    }
     navigation.goBack();
   };
 
+  // --- Live Photo Handlers ---
+  // --- Live Photo Handlers ---
+  const handleShowLivePhoto = async () => {
+    if (!livePhotoResult || Platform.OS !== 'ios') {
+      Alert.alert('Error', 'Live Photo not available or not supported');
+      return;
+    }
+
+    try {
+      const localIdentifier =
+        livePhotoResult.localIdentifier || 'providerAsset';
+
+      // ✅ Call the native module to show the Live Photo
+      await LivePhotoManager.showLivePhoto(localIdentifier);
+
+      // Update state
+      setIsLivePhotoDisplayed(true);
+    } catch (err) {
+      console.error('Error displaying Live Photo:', err);
+      Alert.alert('Error', 'Failed to display Live Photo');
+    }
+  };
+
+  const hideLivePhoto = () => {
+    if (Platform.OS === 'ios' && LivePhotoManager) {
+      LivePhotoManager.hideLivePhoto();
+      setIsLivePhotoDisplayed(false);
+    }
+  };
+
+  // --- Render Regular Media (Video/Image) ---
   const renderMediaPreview = () => {
     if (!media) return null;
 
@@ -91,17 +134,11 @@ const VideoScreen = (): ReactElement => {
           style={previewMediaStyle}
           resizeMode="cover"
           repeat={false}
-          controls={true}
-          paused={true}
-          onLoad={data => {
-            setDuration(data.duration);
-          }}
-          onProgress={data => {
-            setCurrentTime(data.currentTime);
-          }}
-          onEnd={() => {
-            setCurrentTime(0);
-          }}
+          controls
+          paused
+          onLoad={data => setDuration(data.duration)}
+          onProgress={data => setCurrentTime(data.currentTime)}
+          onEnd={() => setCurrentTime(0)}
         />
       );
     }
@@ -115,73 +152,117 @@ const VideoScreen = (): ReactElement => {
     );
   };
 
+  // --- Render Live Photo (video + photo + details) ---
   const renderLivePhotoContent = () => {
     if (!livePhotoResult) return null;
 
-    const livePhoto = livePhotoResult as PickedLivePhoto;
-    const aspectRatio =
-      livePhoto.pixelWidth && livePhoto.pixelHeight
-        ? livePhoto.pixelWidth / livePhoto.pixelHeight
-        : 4 / 3;
-    const imageHeight = (screenWidth - 40) / aspectRatio;
+    const livePhoto = livePhotoResult as LivePhotoResult;
+
+    const creationDate = livePhoto.creationDate
+      ? formatDate(Number(livePhoto.creationDate) * 1000)
+      : 'N/A';
+    const modificationDate = livePhoto.modificationDate
+      ? formatDate(Number(livePhoto.modificationDate) * 1000)
+      : 'N/A';
+
+    const latitude = livePhoto.location?.latitude?.toFixed(4) ?? 'N/A';
+    const longitude = livePhoto.location?.longitude?.toFixed(4) ?? 'N/A';
 
     return (
-      <View style={styles.livePhotoContainer}>
+      <View style={styles.mediaDetailsContainer}>
         {/* Header */}
         <View style={styles.livePhotoHeader}>
-          <Text style={styles.livePhotoTitle}>📸 Live Photo</Text>
+          <Text style={styles.livePhotoTitle}>📸 Live Photo Details</Text>
+          <Text style={styles.livePhotoSubtitle}>Created: {creationDate}</Text>
           <Text style={styles.livePhotoSubtitle}>
-            {livePhoto.creationDate
-              ? formatDate(parseInt(livePhoto.creationDate) * 1000)
-              : ''}
+            Modified: {modificationDate}
           </Text>
-          {livePhoto.location && (
-            <Text style={styles.locationText}>
-              📍 {livePhoto.location.latitude.toFixed(4)},{' '}
-              {livePhoto.location.longitude.toFixed(4)}
+          {livePhoto.duration !== undefined && (
+            <Text style={styles.livePhotoSubtitle}>
+              Duration: {livePhoto.duration.toFixed(2)} sec
             </Text>
           )}
+          <Text style={styles.locationText}>
+            📍 Lat: {latitude}, Lon: {longitude}
+          </Text>
+          <Text style={styles.livePhotoSubtitle}>
+            Dimensions: {livePhoto.pixelWidth} x {livePhoto.pixelHeight}
+          </Text>
         </View>
 
-        {/* Live Photo Player */}
-        <View
-          style={[
-            previewContainerStyle,
-            livePhoto.pixelWidth && livePhoto.pixelHeight
-              ? { aspectRatio: livePhoto.pixelWidth / livePhoto.pixelHeight }
-              : { height: moderateScale(200) },
-          ]}
-        >
-          {!isPlaying && (
+        {/* Live Photo Components Preview */}
+        {livePhoto.photo && (
+          <View style={styles.componentPreview}>
+            <Text style={styles.componentTitle}>📷 Still Image</Text>
             <Image
               source={{ uri: `file://${livePhoto.photo}` }}
-              style={previewMediaStyle}
+              style={[previewMediaStyle, { height: 200 }]}
               resizeMode="cover"
             />
-          )}
+          </View>
+        )}
 
-          {livePhoto.video && (
+        {livePhoto.video && (
+          <View style={styles.componentPreview}>
+            <Text style={styles.componentTitle}>🎥 Video Component</Text>
             <Video
               source={{ uri: `file://${livePhoto.video}` }}
-              style={previewMediaStyle}
-              paused={!isPlaying}
+              style={[previewMediaStyle, { height: 200 }]}
               resizeMode="cover"
-              repeat
-              controls={showControls}
-              onLoad={() => setIsPlaying(true)}
-              onEnd={() => {
-                setIsPlaying(false);
-                setShowControls(true);
-              }}
-              onTouchStart={() => setShowControls(true)}
+              controls
+              paused
             />
-          )}
-        </View>
+          </View>
+        )}
+
+        {livePhoto.audio && (
+          <View style={styles.componentPreview}>
+            <Text style={styles.componentTitle}>🎵 Audio Component</Text>
+            <Text style={styles.componentInfo}>
+              Audio extracted from Live Photo
+            </Text>
+          </View>
+        )}
+
+        {/* Show Live Photo Button */}
+        <TouchableOpacity
+          style={[styles.extractButton, styles.livePhotoButton]}
+          onPress={handleShowLivePhoto}
+          activeOpacity={0.8}
+        >
+          <View style={styles.extractButtonContent}>
+            <Text style={styles.extractButtonText}>
+              {isLivePhotoDisplayed ? '🔄 Show Again' : '▶️ Play Live Photo'}
+            </Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* Hide Live Photo Button */}
+        {isLivePhotoDisplayed && (
+          <TouchableOpacity
+            style={[styles.extractButton, styles.hideLivePhotoButton]}
+            onPress={hideLivePhoto}
+            activeOpacity={0.8}
+          >
+            <View style={styles.extractButtonContent}>
+              <Text style={styles.extractButtonText}>⏹️ Hide Live Photo</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {livePhoto.transcription && (
+          <View style={styles.transcriptionContainer}>
+            <Text style={styles.componentTitle}>📝 Transcription</Text>
+            <Text style={styles.transcriptionText}>
+              {livePhoto.transcription}
+            </Text>
+          </View>
+        )}
       </View>
     );
   };
 
-  // Audio extraction and cleaning functions remain unchanged...
+  // --- Audio Extraction ---
   const handleExtractAudio = async (): Promise<void> => {
     if (!media?.path || !isVideo(media.mime)) {
       return Alert.alert(
@@ -253,7 +334,7 @@ const VideoScreen = (): ReactElement => {
           >
             {/* Header */}
             <View style={styles.header}>
-              <TouchableOpacity onPress={() => navigation.goBack()}>
+              <TouchableOpacity onPress={() => clearMedia()}>
                 <Icons.LeftArrow
                   height={moderateScale(30)}
                   width={moderateScale(30)}
@@ -266,19 +347,18 @@ const VideoScreen = (): ReactElement => {
                   {livePhotoResult ? 'Live Photo Details' : 'Media Details'}
                 </Text>
                 <Text style={styles.headerSubtitle}>
-                  {media ? 'Selected Media' : 'Live Photo Components'}
+                  {livePhotoResult ? 'Live Photo Components' : 'Selected Media'}
                 </Text>
               </View>
               <View style={{ width: moderateScale(30) }} />
             </View>
 
-            {/* Live Photo Result */}
+            {/* Live Photo */}
             {livePhotoResult && renderLivePhotoContent()}
 
             {/* Regular Media */}
-            {media && (
+            {media && !livePhotoResult && (
               <View style={styles.mediaDetailsContainer}>
-                {/* Media Preview */}
                 <Components.MediaDetails
                   media={media}
                   clearMedia={clearMedia}

@@ -1,4 +1,6 @@
-// Helper functions for formatting data
+// utils/formatters.ts
+
+// Format file size in human-readable form
 const formatFileSize = (bytes: number, short: boolean = false): string => {
   if (bytes === 0) return '0 Bytes';
 
@@ -11,24 +13,25 @@ const formatFileSize = (bytes: number, short: boolean = false): string => {
   return `${size} ${short ? shortSizes[i] : sizes[i]}`;
 };
 
-const formatDate = (timestamp: number): string => {
-  const date = new Date(timestamp);
+// Format date in relative/absolute style
+const formatDate = (timestamp: string | number): string => {
+  const date = new Date(Number(timestamp));
   const now = new Date();
-  const diffTime = Math.abs(now.getTime() - date.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const diffTime = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 1) {
+  if (diffDays === 0) {
     return `Today at ${date.toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit',
     })}`;
-  } else if (diffDays === 2) {
+  } else if (diffDays === 1) {
     return `Yesterday at ${date.toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit',
     })}`;
-  } else if (diffDays <= 7) {
-    return `${diffDays - 1} days ago`;
+  } else if (diffDays < 7) {
+    return `${diffDays} days ago`;
   } else {
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -40,36 +43,35 @@ const formatDate = (timestamp: number): string => {
   }
 };
 
+// Format duration from milliseconds
 const formatDuration = (milliseconds: number): string => {
-  if (milliseconds < 1000) {
-    return `${milliseconds}ms`;
-  } else if (milliseconds < 60000) {
-    return `${(milliseconds / 1000).toFixed(1)}s`;
-  } else {
-    const minutes = Math.floor(milliseconds / 60000);
-    const seconds = ((milliseconds % 60000) / 1000).toFixed(0);
-    return `${minutes}m ${seconds}s`;
-  }
+  if (milliseconds < 1000) return `${milliseconds}ms`;
+  if (milliseconds < 60000) return `${(milliseconds / 1000).toFixed(1)}s`;
+
+  const minutes = Math.floor(milliseconds / 60000);
+  const seconds = Math.floor((milliseconds % 60000) / 1000);
+  return `${minutes}m ${seconds}s`;
 };
 
+// Format seconds to mm:ss
 const formatTime = (seconds: number): string => {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
+// Format resolution and calculate megapixels
 const formatResolution = (width?: number, height?: number): string => {
   if (!width || !height) return 'Unknown';
-  const megapixels = (width * height) / 1000000;
-  if (megapixels >= 1) {
-    return `${width} × ${height}\n(${megapixels.toFixed(1)}MP)`;
-  }
-  return `${width} × ${height}`;
+  const megapixels = (width * height) / 1_000_000;
+  return megapixels >= 1
+    ? `${width} × ${height}\n(${megapixels.toFixed(1)}MP)`
+    : `${width} × ${height}`;
 };
 
-// 👇 replace your old function with this one
-const formatMimeType = (mime: string | undefined): string => {
-  if (!mime) return 'Unknown'; // ✅ prevents crash if undefined
+// Map MIME type to readable format
+const formatMimeType = (mime?: string): string => {
+  if (!mime) return 'Unknown';
 
   const mimeMap: { [key: string]: string } = {
     'image/jpeg': 'JPEG Image',
@@ -86,19 +88,23 @@ const formatMimeType = (mime: string | undefined): string => {
     'video/quicktime': 'QuickTime Video',
   };
 
-  const lowerMime = mime.toLowerCase();
-  return mimeMap[lowerMime] || mime.split('/')[1]?.toUpperCase() || 'Unknown';
+  return (
+    mimeMap[mime.toLowerCase()] ||
+    mime.split('/')[1]?.toUpperCase() ||
+    'Unknown'
+  );
 };
 
-const formatCropRect = (cropRect: {
+// Format crop rectangle
+const formatCropRect = (rect: {
   width: number;
   height: number;
   x: number;
   y: number;
-}): string => {
-  return `Size: ${cropRect.width} × ${cropRect.height}\nPosition: (${cropRect.x}, ${cropRect.y})`;
-};
+}): string =>
+  `Size: ${rect.width} × ${rect.height}\nPosition: (${rect.x}, ${rect.y})`;
 
+// Map EXIF keys to human-readable
 const formatExifKey = (key: string): string => {
   const keyMap: { [key: string]: string } = {
     Make: 'Camera Make',
@@ -123,71 +129,62 @@ const formatExifKey = (key: string): string => {
     ColorSpace: 'Color Space',
     ExifVersion: 'EXIF Version',
   };
-
   return keyMap[key] || key.replace(/([A-Z])/g, ' $1').trim();
 };
 
+// Format EXIF value based on key
 const formatExifValue = (key: string, value: any): string => {
-  if (value === null || value === undefined) return 'N/A';
+  if (value == null) return 'N/A';
 
   switch (key) {
     case 'ExposureTime':
-      if (typeof value === 'number') {
-        return value < 1 ? `1/${Math.round(1 / value)} sec` : `${value} sec`;
-      }
-      return String(value);
-
+      return typeof value === 'number'
+        ? value < 1
+          ? `1/${Math.round(1 / value)} sec`
+          : `${value} sec`
+        : String(value);
     case 'FNumber':
       return `f/${value}`;
-
     case 'FocalLength':
       return `${value}mm`;
-
     case 'ISO':
       return `ISO ${value}`;
-
     case 'Flash':
-      const flashModes: { [key: string]: string } = {
-        '0': 'No Flash',
-        '1': 'Flash Fired',
-        '16': 'No Flash',
-        '24': 'Flash Fired (Auto)',
-        '25': 'Flash Fired (Auto, Return Light)',
-      };
-      return flashModes[String(value)] || `Flash Mode ${value}`;
-
+      return (
+        {
+          '0': 'No Flash',
+          '1': 'Flash Fired',
+          '16': 'No Flash',
+          '24': 'Flash Fired (Auto)',
+          '25': 'Flash Fired (Auto, Return Light)',
+        }[String(value)] || `Flash Mode ${value}`
+      );
     case 'WhiteBalance':
       return value === '0' ? 'Auto' : value === '1' ? 'Manual' : String(value);
-
     case 'Orientation':
-      const orientations: { [key: string]: string } = {
-        '1': 'Normal',
-        '2': 'Flip Horizontal',
-        '3': 'Rotate 180°',
-        '4': 'Flip Vertical',
-        '5': 'Rotate 90° CW + Flip',
-        '6': 'Rotate 90° CW',
-        '7': 'Rotate 90° CCW + Flip',
-        '8': 'Rotate 90° CCW',
-      };
-      return orientations[String(value)] || `Orientation ${value}`;
-
+      return (
+        {
+          '1': 'Normal',
+          '2': 'Flip Horizontal',
+          '3': 'Rotate 180°',
+          '4': 'Flip Vertical',
+          '5': 'Rotate 90° CW + Flip',
+          '6': 'Rotate 90° CW',
+          '7': 'Rotate 90° CCW + Flip',
+          '8': 'Rotate 90° CCW',
+        }[String(value)] || `Orientation ${value}`
+      );
     case 'DateTime':
     case 'DateTimeOriginal':
     case 'DateTimeDigitized':
-      if (typeof value === 'string') {
-        try {
-          const date = new Date(value.replace(/:/g, '-').replace(' ', 'T'));
-          return formatDate(date.getTime());
-        } catch {
-          return value;
-        }
+      try {
+        return formatDate(new Date(String(value)).getTime());
+      } catch {
+        return String(value);
       }
-      return String(value);
-
     case 'GPSLatitude':
     case 'GPSLongitude':
-      if (typeof value === 'number') {
+      if (typeof value === 'number')
         return `${Math.abs(value).toFixed(6)}°${
           value >= 0
             ? key.includes('Latitude')
@@ -197,21 +194,16 @@ const formatExifValue = (key: string, value: any): string => {
             ? 'S'
             : 'W'
         }`;
-      }
       return String(value);
-
     case 'GPSAltitude':
       return `${value}m`;
-
     case 'XResolution':
     case 'YResolution':
       return `${value} dpi`;
-
     default:
-      if (typeof value === 'object') {
-        return JSON.stringify(value, null, 2);
-      }
-      return String(value);
+      return typeof value === 'object'
+        ? JSON.stringify(value, null, 2)
+        : String(value);
   }
 };
 
