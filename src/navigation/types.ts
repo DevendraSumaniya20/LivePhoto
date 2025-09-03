@@ -66,7 +66,7 @@ export type PickedLivePhoto = PickedMedia & {
 
 // --- LivePhotoManager module interface
 export interface LivePhotoResult {
-  photo: string;
+  photo: string; // ✅ Swift returns "photo" now
   video: string;
   audio?: string;
   transcription?: string;
@@ -79,7 +79,7 @@ export interface LivePhotoResult {
     altitude?: number;
     timestamp?: number;
   };
-  duration: number;
+  duration?: number; // ✅ optional
   pixelWidth: number;
   pixelHeight: number;
   photoMime?: string;

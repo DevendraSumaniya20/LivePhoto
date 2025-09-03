@@ -5,7 +5,7 @@ import Colors from '../../constants/color';
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.black20,
   },
   scrollContainer: {
     flex: 1,
