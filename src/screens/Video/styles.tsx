@@ -209,6 +209,41 @@ const styles = StyleSheet.create({
     color: Colors.white,
     lineHeight: moderateScale(20),
   },
+  livePhotoMetadataContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+
+  // Metadata Section (label + value)
+  metadataSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+    paddingVertical: 4,
+  },
+
+  // Metadata Label
+  metadataLabel: {
+    fontSize: moderateScale(13),
+    fontWeight: '600',
+    color: Colors.white80,
+    flex: 1,
+    marginRight: 12,
+  },
+
+  // Metadata Value
+  metadataValue: {
+    fontSize: moderateScale(13),
+    color: Colors.white,
+    flex: 2,
+    textAlign: 'right',
+    flexWrap: 'wrap',
+  },
 });
 
 export default styles;

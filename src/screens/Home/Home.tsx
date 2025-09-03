@@ -7,8 +7,6 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
-  TouchableOpacity,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
@@ -20,14 +18,9 @@ import Icons from '../../constants/svgPath';
 import { handlePickMedia, isLivePhoto } from '../../utils/mediaPicker';
 import {
   RootStackParamList,
-  LivePhotoResult,
   PickedLivePhoto,
   mapPickedLivePhotoToResult,
 } from '../../navigation/types';
-import { NativeModules } from 'react-native';
-import Video from 'react-native-video';
-
-const { LivePhotoManager } = NativeModules;
 
 type HomeScreenNavigationProp = NavigationProp<RootStackParamList, 'Home'>;
 
@@ -35,36 +28,17 @@ const Home = (): ReactElement => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const [isProcessingLivePhoto, setIsProcessingLivePhoto] = useState(false);
 
-  // ✅ Use LivePhotoResult for state instead of minimal inline type
-  const [livePhoto, setLivePhoto] = useState<LivePhotoResult | null>(null);
-
-  const pickLivePhotoDirect = async () => {
-    try {
-      setIsProcessingLivePhoto(true);
-      const result: LivePhotoResult = await LivePhotoManager.pickLivePhoto();
-      setLivePhoto(result);
-      Alert.alert('Live Photo picked successfully!');
-    } catch (e) {
-      console.error(e);
-      Alert.alert('Failed to pick Live Photo.');
-    } finally {
-      setIsProcessingLivePhoto(false);
-    }
-  };
-
   const handleMediaSelection = async (
     source: 'gallery' | 'camera' | 'record' | 'livephoto',
   ) => {
     try {
-      if (source === 'livephoto') {
-        await pickLivePhotoDirect();
-        return;
-      }
+      setIsProcessingLivePhoto(true);
 
       const selectedMedia = await handlePickMedia(source);
+
       if (selectedMedia) {
         if (isLivePhoto(selectedMedia) && selectedMedia.localIdentifier) {
-          const livePhotoResult: LivePhotoResult = mapPickedLivePhotoToResult(
+          const livePhotoResult = mapPickedLivePhotoToResult(
             selectedMedia as PickedLivePhoto,
           );
           navigation.navigate('Video', { livePhotoResult });
@@ -125,7 +99,7 @@ const Home = (): ReactElement => {
                 title: 'Live Photo',
                 subtitle:
                   Platform.OS === 'ios'
-                    ? 'Select & preview Live Photos here'
+                    ? 'Select Live Photos from gallery'
                     : 'iOS only feature',
                 onPress: () => handleMediaSelection('livephoto'),
                 disabled: Platform.OS !== 'ios' || isProcessingLivePhoto,
@@ -155,121 +129,10 @@ const Home = (): ReactElement => {
             ))}
           </View>
 
-          {/* Live Photo Preview & Details */}
-          {livePhoto && (
-            <View
-              style={{
-                marginTop: 30,
-                width: '100%',
-                alignItems: 'center',
-                position: 'relative',
-              }}
-            >
-              {/* Close button */}
-              <TouchableOpacity
-                onPress={() => setLivePhoto(null)}
-                style={{
-                  position: 'absolute',
-                  top: -10,
-                  right: 10,
-                  zIndex: 10,
-                  backgroundColor: 'rgba(0,0,0,0.6)',
-                  padding: 6,
-                  borderRadius: 20,
-                }}
-              >
-                <Icons.Cross height={30} width={30} fill={Colors.white100} />
-              </TouchableOpacity>
-
-              <Text
-                style={{
-                  marginBottom: 10,
-                  color: Colors.white,
-                  fontSize: moderateScale(16),
-                  fontWeight: '600',
-                }}
-              >
-                Live Photo Preview:
-              </Text>
-
-              {/* Still Photo */}
-              <Image
-                source={{ uri: livePhoto.photo }}
-                style={{ width: 300, height: 200, marginBottom: 10 }}
-                resizeMode="cover"
-              />
-
-              {/* Video Part */}
-              <Video
-                source={{ uri: livePhoto.video }}
-                style={{ width: 300, height: 400 }}
-                repeat
-                muted={false}
-                resizeMode="cover"
-              />
-
-              {/* Metadata */}
-              <View style={{ marginTop: 15, alignItems: 'center' }}>
-                <Text style={{ color: Colors.white }}>
-                  Local ID: {livePhoto.localIdentifier}
-                </Text>
-                <Text style={{ color: Colors.white }}>
-                  Created:{' '}
-                  {new Date(livePhoto.creationDate * 1000).toLocaleString()}
-                </Text>
-                <Text style={{ color: Colors.white }}>
-                  Modified:{' '}
-                  {new Date(livePhoto.modificationDate * 1000).toLocaleString()}
-                </Text>
-                <Text style={{ color: Colors.white }}>
-                  Resolution: {livePhoto.pixelWidth} x {livePhoto.pixelHeight}
-                </Text>
-                <Text style={{ color: Colors.white }}>
-                  Duration: {livePhoto.duration?.toFixed(2)}s
-                </Text>
-
-                {/* Mime types + filenames */}
-                {livePhoto.photoMime && (
-                  <Text style={{ color: Colors.white }}>
-                    Photo MIME: {livePhoto.photoMime}
-                  </Text>
-                )}
-                {livePhoto.videoMime && (
-                  <Text style={{ color: Colors.white }}>
-                    Video MIME: {livePhoto.videoMime}
-                  </Text>
-                )}
-                {livePhoto.filenamePhoto && (
-                  <Text style={{ color: Colors.white }}>
-                    Photo File: {livePhoto.filenamePhoto}
-                  </Text>
-                )}
-                {livePhoto.filenameVideo && (
-                  <Text style={{ color: Colors.white }}>
-                    Video File: {livePhoto.filenameVideo}
-                  </Text>
-                )}
-
-                {/* Location */}
-                {livePhoto.location?.latitude && (
-                  <Text style={{ color: Colors.white }}>
-                    Location: {livePhoto.location.latitude},{' '}
-                    {livePhoto.location.longitude}
-                  </Text>
-                )}
-                {livePhoto.location?.altitude !== undefined && (
-                  <Text style={{ color: Colors.white }}>
-                    Altitude: {livePhoto.location.altitude} m
-                  </Text>
-                )}
-              </View>
-            </View>
-          )}
-
           <View style={styles.bottomSpacing} />
         </ScrollView>
 
-        {/* Overlay while processing Live Photo */}
+        {/* Loading overlay */}
         {isProcessingLivePhoto && (
           <View
             style={[
@@ -289,8 +152,9 @@ const Home = (): ReactElement => {
           >
             <ActivityIndicator size="large" color={Colors.white} />
             <Text style={styles.loadingText}>
-              Processing Live Photo...
-              {'\n'}Extracting components and generating preview
+              {isProcessingLivePhoto
+                ? 'Processing Live Photo...'
+                : 'Loading...'}
             </Text>
           </View>
         )}
