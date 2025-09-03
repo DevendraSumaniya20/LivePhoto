@@ -2,14 +2,16 @@
 export type PickResult = {
   photo: string;
   video: string;
-  audio?: string;
-  transcription?: string;
+  audioRaw?: string; // ✅ new
+  audioCleaned?: string; // ✅ new
+  transcription?: string; // ✅ optional
   localIdentifier?: string;
   creationDate?: string;
   modificationDate?: string;
   location?: {
     latitude: number;
     longitude: number;
+    altitude?: number;
   };
   duration?: number;
   pixelWidth?: number;
@@ -54,8 +56,9 @@ export type PickedLivePhoto = PickedMedia & {
   video: string; // video component path
   photoMime?: string;
   videoMime?: string;
-  audio?: string; // optional
-  transcription?: string; // optional
+  audioRaw?: string; // ✅ new
+  audioCleaned?: string; // ✅ new
+  transcription?: string; // ✅ new
   location?: { latitude: number; longitude: number; altitude?: number } | null;
   duration?: number; // video duration in seconds
   pixelWidth?: number;
@@ -66,10 +69,11 @@ export type PickedLivePhoto = PickedMedia & {
 
 // --- LivePhotoManager module interface
 export interface LivePhotoResult {
-  photo: string; // ✅ Swift returns "photo" now
+  photo: string; // ✅ Swift returns "photo"
   video: string;
-  audio?: string;
-  transcription?: string;
+  audioRaw?: string; // ✅ new
+  audioCleaned?: string; // ✅ new
+  transcription?: string; // ✅ new
   localIdentifier: string;
   creationDate: number;
   modificationDate: number;
@@ -79,7 +83,7 @@ export interface LivePhotoResult {
     altitude?: number;
     timestamp?: number;
   };
-  duration?: number; // ✅ optional
+  duration?: number;
   pixelWidth: number;
   pixelHeight: number;
   photoMime?: string;
@@ -90,6 +94,7 @@ export interface LivePhotoResult {
 
 export interface LivePhotoManagerInterface {
   pickLivePhoto(): Promise<LivePhotoResult>;
+  pickLivePhotoWithTranscription(): Promise<LivePhotoResult>; // ✅ added
   checkDeviceCompatibility(): Promise<{
     isSupported: boolean;
     platform: string;
@@ -122,7 +127,8 @@ export const mapPickedLivePhotoToResult = (
 ): LivePhotoResult => ({
   photo: picked.photo,
   video: picked.video,
-  audio: picked.audio,
+  audioRaw: picked.audioRaw,
+  audioCleaned: picked.audioCleaned,
   transcription: picked.transcription,
   localIdentifier: picked.localIdentifier || '',
   creationDate: picked.creationDate
@@ -153,7 +159,8 @@ export const mapLivePhotoResultToPicked = (
 ): PickedLivePhoto => ({
   photo: result.photo ?? '',
   video: result.video ?? '',
-  audio: result.audio ?? '',
+  audioRaw: result.audioRaw ?? '',
+  audioCleaned: result.audioCleaned ?? '',
   transcription: result.transcription ?? '',
   localIdentifier: result.localIdentifier ?? '',
   creationDate: result.creationDate

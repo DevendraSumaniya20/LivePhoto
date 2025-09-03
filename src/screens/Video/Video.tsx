@@ -1,4 +1,4 @@
-import React, { ReactElement, useState, useEffect } from 'react';
+import React, { ReactElement, useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   Alert,
   ScrollView,
   Platform,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Video from 'react-native-video';
@@ -29,16 +28,17 @@ import { moderateScale } from '../../constants/responsive';
 import { isVideo } from '../../utils/mediaPicker';
 import { getGradientProps } from '../../utils/gradients';
 import { previewMediaStyle } from '../../constants/styles';
-import { LivePhotoResult, RootStackParamList } from '../../navigation/types';
+import { RootStackParamList } from '../../navigation/types';
 
-const { AudioModule, LivePhotoManager } = NativeModules;
+const { AudioModule } = NativeModules;
 
-interface ExtractedAudio {
+interface ProcessedAudio {
   path: string;
   size: number;
   duration: number;
   format: string;
   sampleRate: number;
+  processed: boolean;
 }
 
 type VideoScreenRouteProp = RouteProp<RootStackParamList, 'Video'>;
@@ -49,36 +49,23 @@ const VideoScreen = (): ReactElement => {
   const navigation = useNavigation<VideoScreenNavigationProp>();
   const { media, livePhotoResult } = route.params || {};
 
-  // Regular media audio states
-  const [extractedAudio, setExtractedAudio] = useState<ExtractedAudio | null>(
+  const [processedAudio, setProcessedAudio] = useState<ProcessedAudio | null>(
     null,
   );
-  const [cleanedAudio, setCleanedAudio] = useState<ExtractedAudio | null>(null);
-  const [isExtracting, setIsExtracting] = useState<boolean>(false);
-  const [isCleaning, setIsCleaning] = useState<boolean>(false);
+  const [isProcessingAudio, setIsProcessingAudio] = useState<boolean>(false);
 
-  // Live Photo audio states
-  const [livePhotoExtractedAudio, setLivePhotoExtractedAudio] =
-    useState<ExtractedAudio | null>(null);
-  const [livePhotoCleanedAudio, setLivePhotoCleanedAudio] =
-    useState<ExtractedAudio | null>(null);
-  const [isExtractingLivePhoto, setIsExtractingLivePhoto] =
-    useState<boolean>(false);
-  const [isCleaningLivePhoto, setIsCleaningLivePhoto] =
+  const [livePhotoProcessedAudio, setLivePhotoProcessedAudio] =
+    useState<ProcessedAudio | null>(null);
+  const [isProcessingLivePhotoAudio, setIsProcessingLivePhotoAudio] =
     useState<boolean>(false);
 
-  // UI states
-  const [metadataExpanded, setMetadataExpanded] = useState<boolean>(false);
   const [gradientProps] = useState(() => getGradientProps());
 
-  const clearMedia = (): void => {
-    navigation.goBack();
-  };
+  const clearMedia = (): void => navigation.goBack();
 
-  // --- Render Regular Media (Video/Image) ---
+  // --- Media Preview ---
   const renderMediaPreview = () => {
     if (!media) return null;
-
     if (isVideo(media.mime)) {
       return (
         <Video
@@ -91,7 +78,6 @@ const VideoScreen = (): ReactElement => {
         />
       );
     }
-
     return (
       <Image
         source={{ uri: media.path }}
@@ -101,132 +87,69 @@ const VideoScreen = (): ReactElement => {
     );
   };
 
-  // --- Audio Extraction Functions ---
-  const extractAudioFromPath = async (
-    videoPath: string,
-    setExtracted: (audio: ExtractedAudio | null) => void,
-    setCleaned: (audio: ExtractedAudio | null) => void,
-    setExtracting: (loading: boolean) => void,
+  // --- Generic Audio Processor ---
+  const processAudioFromPath = async (
+    path: string,
+    setProcessed: (audio: ProcessedAudio | null) => void,
+    setProcessing: (loading: boolean) => void,
   ): Promise<void> => {
-    setExtracting(true);
+    setProcessing(true);
     try {
-      const filePath = videoPath.replace('file://', '');
-      const result = await AudioModule.extractAudio(filePath);
+      const filePath = path.replace('file://', '');
+      const result = await AudioModule.extractCleanAudio(filePath);
 
       if (!result?.path) {
-        return Alert.alert('Extraction Failed', 'No audio track found.');
+        return Alert.alert(
+          'Processing Failed',
+          'No audio track found or processing failed.',
+        );
       }
 
-      const defaultFormat = Platform.OS === 'ios' ? 'm4a' : 'm4a';
-      const extractedAudioData = {
-        ...result,
-        format: result.format || defaultFormat,
-        sampleRate: result.sampleRate || 44100,
-      };
-
-      setExtracted(extractedAudioData);
-      setCleaned(null);
-      Alert.alert('Success', 'Audio extracted and ready to play!');
-    } catch (err: any) {
-      console.error('Audio extraction error:', err);
-      Alert.alert('Error', err?.message || 'Failed to extract audio');
-    } finally {
-      setExtracting(false);
-    }
-  };
-
-  const cleanExtractedAudio = async (
-    extractedAudio: ExtractedAudio | null,
-    cleanedAudio: ExtractedAudio | null,
-    setCleaned: (audio: ExtractedAudio | null) => void,
-    setCleaning: (loading: boolean) => void,
-  ): Promise<void> => {
-    const inputPath = cleanedAudio?.path || extractedAudio?.path;
-    if (!inputPath) {
-      return Alert.alert('No Audio', 'Please extract audio first.');
-    }
-
-    setCleaning(true);
-    try {
-      const timestamp = Date.now();
-      const extension = '.m4a';
-      const outputPath = inputPath.replace(
-        /\.\w+$/,
-        `_cleaned_${timestamp}${extension}`,
-      );
-      const cleanedPath = await AudioModule.cleanAudio(inputPath, outputPath);
-
-      setCleaned({
-        ...(cleanedAudio || extractedAudio)!,
-        path: cleanedPath,
-        format: extension.replace('.', ''),
+      setProcessed({
+        path: result.path,
+        size: result.size ?? 0,
+        duration: result.duration ?? 0,
+        format: result.format ?? 'm4a',
+        sampleRate: result.sampleRate ?? 44100,
+        processed: result.processed ?? true,
       });
-      Alert.alert('Success', 'Audio cleaned and saved!');
+
+      Alert.alert('Success', 'Audio extracted and cleaned successfully!');
     } catch (err: any) {
-      console.error('Audio cleaning error:', err);
-      Alert.alert('Error', err?.message || 'Failed to clean audio');
+      console.error('Audio processing error:', err);
+      Alert.alert('Error', err?.message || 'Failed to process audio');
     } finally {
-      setCleaning(false);
+      setProcessing(false);
     }
   };
 
-  // --- Regular Media Audio Handlers ---
-  const handleExtractAudio = async (): Promise<void> => {
-    if (!media?.path || !isVideo(media.mime)) {
-      return Alert.alert(
-        'Invalid Media',
-        'Please select a video to extract audio.',
-      );
-    }
-
-    await extractAudioFromPath(
+  const handleProcessAudio = async (): Promise<void> => {
+    if (!media?.path || !isVideo(media.mime))
+      return Alert.alert('Invalid Media', 'Please select a video.');
+    await processAudioFromPath(
       media.path,
-      setExtractedAudio,
-      setCleanedAudio,
-      setIsExtracting,
+      setProcessedAudio,
+      setIsProcessingAudio,
     );
   };
 
-  const handleCleanAudio = async (): Promise<void> => {
-    await cleanExtractedAudio(
-      extractedAudio,
-      cleanedAudio,
-      setCleanedAudio,
-      setIsCleaning,
-    );
-  };
-
-  // --- Live Photo Audio Handlers ---
-  const handleExtractLivePhotoAudio = async (): Promise<void> => {
-    if (!livePhotoResult?.video) {
+  const handleProcessLivePhotoAudio = async (): Promise<void> => {
+    if (!livePhotoResult?.video)
       return Alert.alert(
         'Invalid Live Photo',
         'No video component found in Live Photo.',
       );
-    }
-
-    await extractAudioFromPath(
+    await processAudioFromPath(
       livePhotoResult.video,
-      setLivePhotoExtractedAudio,
-      setLivePhotoCleanedAudio,
-      setIsExtractingLivePhoto,
+      setLivePhotoProcessedAudio,
+      setIsProcessingLivePhotoAudio,
     );
   };
 
-  const handleCleanLivePhotoAudio = async (): Promise<void> => {
-    await cleanExtractedAudio(
-      livePhotoExtractedAudio,
-      livePhotoCleanedAudio,
-      setLivePhotoCleanedAudio,
-      setIsCleaningLivePhoto,
-    );
-  };
-
-  // --- Audio Player Component ---
-
+  // --- Audio Player ---
   const renderAudioPlayer = (
     title: string,
-    audioData: ExtractedAudio,
+    audioData: ProcessedAudio,
     containerStyle?: any,
   ) => (
     <View style={[styles.audioPlayerContainer, containerStyle]}>
@@ -237,59 +160,50 @@ const VideoScreen = (): ReactElement => {
     </View>
   );
 
-  // Audio Extraction Buttons
-  const renderAudioExtractionButtons = (
+  // --- Audio Processing Button ---
+  const renderAudioProcessingButton = (
     isVideoFile: boolean,
-    extractedAudio: ExtractedAudio | null,
-    cleanedAudio: ExtractedAudio | null,
-    isExtracting: boolean,
-    isCleaning: boolean,
-    onExtract: () => void,
-    onClean: () => void,
+    processedAudio: ProcessedAudio | null,
+    isProcessing: boolean,
+    onProcess: () => void,
     buttonStyle?: any,
   ) => (
     <>
-      {/* Extract Audio Button */}
-      {isVideoFile && (
+      {!processedAudio && isVideoFile && (
         <TouchableOpacity
           style={[
             styles.extractButton,
-            isExtracting && styles.extractButtonDisabled,
+            isProcessing && styles.extractButtonDisabled,
             buttonStyle,
           ]}
-          onPress={onExtract}
-          disabled={isExtracting}
+          onPress={onProcess}
+          disabled={isProcessing}
           activeOpacity={0.8}
         >
           <View style={styles.extractButtonContent}>
             <Text style={styles.extractButtonText}>
-              {isExtracting ? 'Extracting...' : '🎵 Extract Audio'}
+              {isProcessing
+                ? 'Processing Audio...'
+                : '🎵 Extract & Clean Audio'}
             </Text>
           </View>
         </TouchableOpacity>
       )}
-
-      {/* Clean Audio Button */}
-      {extractedAudio && (
+      {processedAudio && (
         <TouchableOpacity
           style={[
             styles.extractButton,
-            isCleaning && styles.extractButtonDisabled,
+            { backgroundColor: Colors.secondary },
+            isProcessing && styles.extractButtonDisabled,
             buttonStyle,
           ]}
-          onPress={onClean}
-          disabled={isCleaning}
+          onPress={onProcess}
+          disabled={isProcessing}
           activeOpacity={0.8}
         >
           <View style={styles.extractButtonContent}>
             <Text style={styles.extractButtonText}>
-              {isCleaning
-                ? cleanedAudio
-                  ? 'Re-cleaning...'
-                  : 'Cleaning...'
-                : cleanedAudio
-                ? '🔄 Clean Again'
-                : '✨ Clean Audio'}
+              {isProcessing ? 'Re-processing...' : '🔄 Re-process Audio'}
             </Text>
           </View>
         </TouchableOpacity>
@@ -297,35 +211,19 @@ const VideoScreen = (): ReactElement => {
     </>
   );
 
-  // Helper component for metadata items
-  const MetadataItem = ({
-    label,
-    value,
-    icon,
-  }: {
-    label: string;
-    value: string;
-    icon: string;
-  }) => (
-    <View style={styles.metadataItem}>
-      <Text style={styles.metadataIcon}>{icon}</Text>
-      <View style={styles.metadataContent}>
-        <Text style={styles.metadataLabel}>{label}</Text>
-        <Text style={styles.metadataValue}>{value}</Text>
-      </View>
-    </View>
-  );
-
-  // Enhanced audio player component
+  // --- Enhanced Audio Player ---
   const renderEnhancedAudioPlayer = (
     title: string,
-    audioData: ExtractedAudio,
+    audioData: ProcessedAudio,
     icon: string,
   ) => (
     <View style={styles.audioPlayerCard}>
       <View style={styles.audioPlayerHeader}>
         <Text style={styles.audioPlayerTitle}>
           {icon} {title}
+          {audioData.processed && (
+            <Text style={styles.processedBadge}> • Enhanced</Text>
+          )}
         </Text>
         <View style={styles.audioPlayerControls}>
           <TouchableOpacity style={styles.audioControlButton}>
@@ -337,243 +235,10 @@ const VideoScreen = (): ReactElement => {
         </View>
       </View>
       <View style={styles.waveformContainer}>
-        {/* You can integrate your actual AudioExtractor component here */}
         <Components.AudioExtractor extractedAudio={audioData} />
       </View>
     </View>
   );
-
-  // --- Render Live Photo Metadata and Components ---
-  const renderLivePhotoContent = () => {
-    if (!livePhotoResult) return null;
-
-    const livePhoto = livePhotoResult as LivePhotoResult;
-
-    return (
-      <ScrollView
-        style={styles.mediaDetailsContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Live Photo Header */}
-        <View style={styles.headerCard}>
-          <View style={styles.headerContent}>
-            <View style={styles.livePhotoIcon}>
-              <Text style={styles.livePhotoEmoji}>📸</Text>
-            </View>
-            <View style={styles.headerText}>
-              <Text style={styles.livePhotoTitle}>Live Photo</Text>
-              <Text style={styles.livePhotoSubtitle}>
-                {livePhoto.pixelWidth} × {livePhoto.pixelHeight}
-                {livePhoto.duration && ` • ${livePhoto.duration.toFixed(1)}s`}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Live Photo Preview Components */}
-        <View style={styles.previewSection}>
-          {/* Still Image Component */}
-          {livePhoto.photo && (
-            <View style={styles.componentCard}>
-              <View style={styles.componentHeader}>
-                <Text style={styles.componentTitle}>📷 Still Image</Text>
-                <TouchableOpacity style={styles.actionButton}>
-                  <Text style={styles.actionButtonText}>Save</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.imageContainer}>
-                <Image
-                  source={{ uri: livePhoto.photo }}
-                  style={styles.previewImage}
-                  resizeMode="cover"
-                />
-              </View>
-            </View>
-          )}
-
-          {/* Video Component */}
-          {livePhoto.video && (
-            <View style={styles.componentCard}>
-              <View style={styles.componentHeader}>
-                <Text style={styles.componentTitle}>🎥 Live Video</Text>
-                <View style={styles.videoControls}>
-                  <TouchableOpacity style={styles.playButton}>
-                    <Text style={styles.playButtonText}>▶️</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.actionButton}>
-                    <Text style={styles.actionButtonText}>Export</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              <View style={styles.videoContainer}>
-                <Video
-                  source={{ uri: livePhoto.video }}
-                  style={styles.previewVideo}
-                  resizeMode="cover"
-                  repeat
-                  muted={false}
-                  controls={false}
-                />
-                <View style={styles.videoOverlay}>
-                  <Text style={styles.videoBadge}>LIVE</Text>
-                </View>
-              </View>
-
-              {/* Audio Extraction Controls */}
-              <View style={styles.audioExtractionSection}>
-                {renderAudioExtractionButtons(
-                  true,
-                  livePhotoExtractedAudio,
-                  livePhotoCleanedAudio,
-                  isExtractingLivePhoto,
-                  isCleaningLivePhoto,
-                  handleExtractLivePhotoAudio,
-                  handleCleanLivePhotoAudio,
-                )}
-              </View>
-            </View>
-          )}
-        </View>
-
-        {/* Audio Players Section */}
-        {(livePhotoExtractedAudio || livePhotoCleanedAudio) && (
-          <View style={styles.audioSection}>
-            <Text style={styles.sectionTitle}>🎵 Audio Components</Text>
-
-            {livePhotoExtractedAudio &&
-              renderEnhancedAudioPlayer(
-                'Extracted Audio',
-                livePhotoExtractedAudio,
-                '🎵',
-              )}
-
-            {livePhotoCleanedAudio &&
-              renderEnhancedAudioPlayer(
-                'Cleaned Audio',
-                livePhotoCleanedAudio,
-                '✨',
-              )}
-          </View>
-        )}
-
-        {/* Metadata Section - Collapsible */}
-        <TouchableOpacity
-          style={styles.metadataHeader}
-          onPress={() => setMetadataExpanded(!metadataExpanded)}
-        >
-          <Text style={styles.sectionTitle}>📊 Details</Text>
-          <Text style={styles.expandIcon}>{metadataExpanded ? '▼' : '▶'}</Text>
-        </TouchableOpacity>
-
-        {metadataExpanded && (
-          <View style={styles.metadataCard}>
-            {/* Basic Information Grid */}
-            <View style={styles.metadataGrid}>
-              <MetadataItem
-                label="Created"
-                value={
-                  livePhoto.creationDate
-                    ? new Date(
-                        livePhoto.creationDate * 1000,
-                      ).toLocaleDateString()
-                    : 'Unknown'
-                }
-                icon="📅"
-              />
-
-              <MetadataItem
-                label="Modified"
-                value={
-                  livePhoto.modificationDate
-                    ? new Date(
-                        livePhoto.modificationDate * 1000,
-                      ).toLocaleDateString()
-                    : 'Unknown'
-                }
-                icon="⏰"
-              />
-
-              {livePhoto.photoMime && (
-                <MetadataItem
-                  label="Photo Format"
-                  value={
-                    livePhoto.photoMime.split('/')[1]?.toUpperCase() ||
-                    livePhoto.photoMime.toUpperCase()
-                  }
-                  icon="🖼"
-                />
-              )}
-
-              {livePhoto.videoMime && (
-                <MetadataItem
-                  label="Video Format"
-                  value={
-                    livePhoto.videoMime.split('/')[1]?.toUpperCase() ||
-                    livePhoto.videoMime.toUpperCase()
-                  }
-                  icon="🎬"
-                />
-              )}
-            </View>
-
-            {/* Location Information */}
-            {livePhoto.location?.latitude && livePhoto.location?.longitude && (
-              <View style={styles.locationCard}>
-                <Text style={styles.locationTitle}>📍 Location</Text>
-                <Text style={styles.locationCoords}>
-                  {livePhoto.location.latitude.toFixed(4)},{' '}
-                  {livePhoto.location.longitude.toFixed(4)}
-                </Text>
-                {livePhoto.location?.altitude !== undefined && (
-                  <Text style={styles.locationAltitude}>
-                    Altitude: {Math.round(livePhoto.location.altitude)}m
-                  </Text>
-                )}
-                <TouchableOpacity style={styles.mapButton}>
-                  <Text style={styles.mapButtonText}>View on Map</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* File Information */}
-            <View style={styles.fileInfoSection}>
-              <Text style={styles.subsectionTitle}>📁 Files</Text>
-              {livePhoto.filenamePhoto && (
-                <View style={styles.fileItem}>
-                  <Text style={styles.fileName} numberOfLines={1}>
-                    📷 {livePhoto.filenamePhoto}
-                  </Text>
-                </View>
-              )}
-              {livePhoto.filenameVideo && (
-                <View style={styles.fileItem}>
-                  <Text style={styles.fileName} numberOfLines={1}>
-                    🎥 {livePhoto.filenameVideo}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
-
-        {/* Transcription Section */}
-        {livePhoto.transcription && (
-          <View style={styles.transcriptionCard}>
-            <Text style={styles.sectionTitle}>📝 Transcription</Text>
-            <View style={styles.transcriptionContent}>
-              <Text style={styles.transcriptionText}>
-                {livePhoto.transcription}
-              </Text>
-              <TouchableOpacity style={styles.copyButton}>
-                <Text style={styles.copyButtonText}>Copy</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      </ScrollView>
-    );
-  };
 
   return (
     <>
@@ -586,7 +251,7 @@ const VideoScreen = (): ReactElement => {
           >
             {/* Header */}
             <View style={styles.header}>
-              <TouchableOpacity onPress={() => clearMedia()}>
+              <TouchableOpacity onPress={clearMedia}>
                 <Icons.LeftArrow
                   height={moderateScale(30)}
                   width={moderateScale(30)}
@@ -605,10 +270,20 @@ const VideoScreen = (): ReactElement => {
               <View style={{ width: moderateScale(30) }} />
             </View>
 
-            {/* Live Photo Content */}
-            {livePhotoResult && renderLivePhotoContent()}
+            {/* Live Photo */}
+            {livePhotoResult && (
+              <Components.LivePhotoDetails
+                livePhotoResult={livePhotoResult}
+                clearMedia={clearMedia}
+                livePhotoCleanedAudio={livePhotoProcessedAudio}
+                isProcessingLivePhotoAudio={isProcessingLivePhotoAudio}
+                onProcessLivePhotoAudio={handleProcessLivePhotoAudio}
+                renderAudioProcessingButton={renderAudioProcessingButton}
+                renderEnhancedAudioPlayer={renderEnhancedAudioPlayer}
+              />
+            )}
 
-            {/* Regular Media Content */}
+            {/* Regular Media */}
             {media && !livePhotoResult && (
               <View style={styles.mediaDetailsContainer}>
                 <Components.MediaDetails
@@ -616,24 +291,14 @@ const VideoScreen = (): ReactElement => {
                   clearMedia={clearMedia}
                   renderMediaPreview={renderMediaPreview}
                 />
-
-                {/* Audio Extraction for Regular Media */}
-                {renderAudioExtractionButtons(
+                {renderAudioProcessingButton(
                   isVideo(media.mime),
-                  extractedAudio,
-                  cleanedAudio,
-                  isExtracting,
-                  isCleaning,
-                  handleExtractAudio,
-                  handleCleanAudio,
+                  processedAudio,
+                  isProcessingAudio,
+                  handleProcessAudio,
                 )}
-
-                {/* Regular Media Audio Players */}
-                {extractedAudio &&
-                  renderAudioPlayer('🎵 Extracted Audio', extractedAudio)}
-
-                {cleanedAudio &&
-                  renderAudioPlayer('✨ Cleaned Audio', cleanedAudio)}
+                {processedAudio &&
+                  renderAudioPlayer('🎵 Enhanced Audio', processedAudio)}
               </View>
             )}
           </ScrollView>

@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
+  NativeModules,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
@@ -20,9 +21,23 @@ import {
   RootStackParamList,
   PickedLivePhoto,
   mapPickedLivePhotoToResult,
+  LivePhotoResult,
 } from '../../navigation/types';
 
 type HomeScreenNavigationProp = NavigationProp<RootStackParamList, 'Home'>;
+
+// ✅ Native module types
+interface LivePhotoManagerType {
+  pickLivePhoto(): Promise<PickedLivePhoto>;
+  pickLivePhotoWithTranscription(): Promise<
+    PickedLivePhoto & { transcription?: string }
+  >;
+  checkDeviceCompatibility(): Promise<boolean>;
+}
+
+const { LivePhotoManager } = NativeModules as {
+  LivePhotoManager: LivePhotoManagerType;
+};
 
 const Home = (): ReactElement => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -34,16 +49,26 @@ const Home = (): ReactElement => {
     try {
       setIsProcessingLivePhoto(true);
 
-      const selectedMedia = await handlePickMedia(source);
+      if (source === 'livephoto') {
+        // 👉 Use new native function with transcription
+        const result = await LivePhotoManager.pickLivePhotoWithTranscription();
 
-      if (selectedMedia) {
-        if (isLivePhoto(selectedMedia) && selectedMedia.localIdentifier) {
-          const livePhotoResult = mapPickedLivePhotoToResult(
-            selectedMedia as PickedLivePhoto,
-          );
-          navigation.navigate('Video', { livePhotoResult });
-        } else {
-          navigation.navigate('Video', { media: selectedMedia });
+        const livePhotoResult: LivePhotoResult =
+          mapPickedLivePhotoToResult(result);
+        navigation.navigate('Video', { livePhotoResult });
+      } else {
+        // 👉 Keep old flow for other sources
+        const selectedMedia = await handlePickMedia(source);
+
+        if (selectedMedia) {
+          if (isLivePhoto(selectedMedia) && selectedMedia.localIdentifier) {
+            const livePhotoResult = mapPickedLivePhotoToResult(
+              selectedMedia as PickedLivePhoto,
+            );
+            navigation.navigate('Video', { livePhotoResult });
+          } else {
+            navigation.navigate('Video', { media: selectedMedia });
+          }
         }
       }
     } catch (error: any) {

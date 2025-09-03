@@ -56,7 +56,11 @@ const AudioExtractor: React.FC<Props> = ({ extractedAudio }) => {
 
   const loadAudio = (audioPath: string) => {
     soundRef.current?.release();
-    const sound = new Sound(audioPath, '', error => {
+
+    const path =
+      Platform.OS === 'ios' ? audioPath : audioPath.replace('file://', '');
+
+    const sound = new Sound(path, undefined, error => {
       if (error) {
         Alert.alert('Error', 'Failed to load audio.');
         return;
@@ -68,10 +72,12 @@ const AudioExtractor: React.FC<Props> = ({ extractedAudio }) => {
 
   const handlePlayPause = () => {
     if (!soundRef.current || !audioLoaded) return;
+
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
     if (isPlaying) {
       soundRef.current.pause();
       setIsPlaying(false);
-      if (intervalRef.current) clearInterval(intervalRef.current);
     } else {
       soundRef.current.play(success => {
         setIsPlaying(false);

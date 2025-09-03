@@ -1,22 +1,24 @@
 import { NativeModules, Platform } from 'react-native';
 
 /**
- * Extracted audio result returned by native module
+ * Processed audio result returned by native module
  */
-export interface ExtractedAudio {
-  path: string; // absolute path to the audio file
-  size: number; // file size in bytes
-  duration: number; // duration in seconds
+export interface ProcessedAudio {
+  path: string; // absolute path
+  size: number; // bytes
+  duration: number; // seconds
+  format: string; // e.g., "m4a"
+  sampleRate: number; // Hz
+  processed: boolean; // whether enhanced/cleaned
 }
 
 // Native module type
-interface AudioExtractorModule {
-  extractAudio(videoPath: string): Promise<ExtractedAudio>;
+interface AudioModuleType {
+  extractCleanAudio(videoPath: string): Promise<ProcessedAudio>;
+  transcribeAudio(audioPath: string): Promise<string | null>;
 }
 
-const { AudioExtractor } = NativeModules as {
-  AudioExtractor: AudioExtractorModule;
-};
+const { AudioModule } = NativeModules as { AudioModule: AudioModuleType };
 
 // --- Custom error for better debugging ---
 export class AudioExtractionError extends Error {
@@ -30,106 +32,69 @@ export class AudioExtractionError extends Error {
 }
 
 /**
- * Extracts audio from a video file and saves it as M4A format
- * @param videoPath - The absolute path to the video file
- * @returns Promise<ExtractedAudio> - The extracted audio info
- * @throws AudioExtractionError - If extraction fails
+ * Extracts and cleans audio from a video file
  */
-export async function extractAudioFromVideo(
+export async function extractCleanAudioFromVideo(
   videoPath: string,
-): Promise<ExtractedAudio> {
-  // Input validation
+): Promise<ProcessedAudio> {
   if (!videoPath || typeof videoPath !== 'string') {
-    throw new AudioExtractionError(
-      'Invalid video path provided',
-      'INVALID_PATH',
-    );
+    throw new AudioExtractionError('Invalid video path', 'INVALID_PATH');
   }
 
-  // Check if the native module is available
-  if (!AudioExtractor) {
+  if (!AudioModule || typeof AudioModule.extractCleanAudio !== 'function') {
     const platformError =
       Platform.OS === 'ios'
-        ? 'AudioExtractor native module not found. Run "cd ios && pod install".'
-        : 'AudioExtractor native module not found. Rebuild the Android app.';
+        ? 'AudioModule native module not found. Run "cd ios && pod install".'
+        : 'AudioModule native module not found. Rebuild the Android app.';
     throw new AudioExtractionError(platformError, 'MODULE_NOT_FOUND');
   }
 
   try {
-    console.log('🎵 Starting audio extraction from:', videoPath);
+    console.log('🎵 Starting audio extraction & cleaning:', videoPath);
+    const result = await AudioModule.extractCleanAudio(videoPath);
 
-    const result = await AudioExtractor.extractAudio(videoPath);
-
-    if (
-      !result ||
-      typeof result.path !== 'string' ||
-      typeof result.size !== 'number' ||
-      typeof result.duration !== 'number'
-    ) {
+    if (!result || !result.path) {
       throw new AudioExtractionError(
         'Invalid response from native module',
         'INVALID_RESPONSE',
       );
     }
 
-    console.log('✅ Audio extracted successfully:', result);
+    console.log('✅ Audio processed successfully:', result);
     return result;
   } catch (err: any) {
-    console.error('❌ Audio extraction failed:', err);
+    console.error('❌ Audio processing failed:', err);
 
-    if (err?.code) {
-      switch (err.code) {
-        case 'no_audio':
-          throw new AudioExtractionError(
-            'No audio track found in the video file',
-            'NO_AUDIO_TRACK',
-          );
-        case 'export_failed':
-          throw new AudioExtractionError(
-            'Failed to export audio from video',
-            'EXPORT_FAILED',
-          );
-        case 'extract_error':
-          throw new AudioExtractionError(
-            'Error occurred during audio extraction',
-            'EXTRACTION_ERROR',
-          );
-        default:
-          throw new AudioExtractionError(
-            `Audio extraction failed: ${err.message}`,
-            err.code,
-          );
-      }
-    }
+    const code = err?.code || 'UNKNOWN_ERROR';
+    const message =
+      err?.message || 'Unknown error occurred during audio processing';
 
-    if (err instanceof Error) {
-      throw new AudioExtractionError(
-        `Audio extraction failed: ${err.message}`,
-        'UNKNOWN_ERROR',
-      );
-    }
-
-    throw new AudioExtractionError(
-      'Unknown error occurred during audio extraction',
-      'UNKNOWN_ERROR',
-    );
+    throw new AudioExtractionError(message, code);
   }
 }
 
 /**
- * Checks if the AudioExtractor native module is available
+ * Transcribe audio using native module
  */
-export function isAudioExtractionSupported(): boolean {
-  return !!AudioExtractor && typeof AudioExtractor.extractAudio === 'function';
+export async function transcribeAudio(
+  audioPath: string,
+): Promise<string | null> {
+  if (!audioPath || typeof audioPath !== 'string') return null;
+  if (!AudioModule || typeof AudioModule.transcribeAudio !== 'function')
+    return null;
+
+  try {
+    const transcription = await AudioModule.transcribeAudio(audioPath);
+    return transcription || null;
+  } catch (err) {
+    console.error('❌ Transcription failed:', err);
+    return null;
+  }
 }
 
 /**
- * Gets information about the audio extraction capability
+ * Checks if audio extraction is supported
  */
-export function getAudioExtractionInfo() {
-  return {
-    platform: Platform.OS,
-    supported: isAudioExtractionSupported(),
-    moduleAvailable: !!AudioExtractor,
-  };
+export function isAudioExtractionSupported(): boolean {
+  return !!AudioModule && typeof AudioModule.extractCleanAudio === 'function';
 }
