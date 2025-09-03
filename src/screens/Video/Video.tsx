@@ -26,18 +26,12 @@ import styles from './styles';
 import Components from '../../components';
 import Icons from '../../constants/svgPath';
 import { moderateScale } from '../../constants/responsive';
-import { formatDate } from '../../utils/FormattingData';
 import { isVideo } from '../../utils/mediaPicker';
 import { getGradientProps } from '../../utils/gradients';
 import { previewMediaStyle } from '../../constants/styles';
-import {
-  LivePhotoResult,
-  PickedMedia,
-  RootStackParamList,
-} from '../../navigation/types';
+import { LivePhotoResult, RootStackParamList } from '../../navigation/types';
 
 const { AudioModule, LivePhotoManager } = NativeModules;
-const { width: screenWidth } = Dimensions.get('window');
 
 interface ExtractedAudio {
   path: string;
@@ -73,6 +67,8 @@ const VideoScreen = (): ReactElement => {
   const [isCleaningLivePhoto, setIsCleaningLivePhoto] =
     useState<boolean>(false);
 
+  // UI states
+  const [metadataExpanded, setMetadataExpanded] = useState<boolean>(false);
   const [gradientProps] = useState(() => getGradientProps());
 
   const clearMedia = (): void => {
@@ -227,6 +223,7 @@ const VideoScreen = (): ReactElement => {
   };
 
   // --- Audio Player Component ---
+
   const renderAudioPlayer = (
     title: string,
     audioData: ExtractedAudio,
@@ -240,9 +237,9 @@ const VideoScreen = (): ReactElement => {
     </View>
   );
 
-  // --- Audio Extraction Buttons ---
+  // Audio Extraction Buttons
   const renderAudioExtractionButtons = (
-    isVideo: boolean,
+    isVideoFile: boolean,
     extractedAudio: ExtractedAudio | null,
     cleanedAudio: ExtractedAudio | null,
     isExtracting: boolean,
@@ -253,7 +250,7 @@ const VideoScreen = (): ReactElement => {
   ) => (
     <>
       {/* Extract Audio Button */}
-      {isVideo && (
+      {isVideoFile && (
         <TouchableOpacity
           style={[
             styles.extractButton,
@@ -300,6 +297,52 @@ const VideoScreen = (): ReactElement => {
     </>
   );
 
+  // Helper component for metadata items
+  const MetadataItem = ({
+    label,
+    value,
+    icon,
+  }: {
+    label: string;
+    value: string;
+    icon: string;
+  }) => (
+    <View style={styles.metadataItem}>
+      <Text style={styles.metadataIcon}>{icon}</Text>
+      <View style={styles.metadataContent}>
+        <Text style={styles.metadataLabel}>{label}</Text>
+        <Text style={styles.metadataValue}>{value}</Text>
+      </View>
+    </View>
+  );
+
+  // Enhanced audio player component
+  const renderEnhancedAudioPlayer = (
+    title: string,
+    audioData: ExtractedAudio,
+    icon: string,
+  ) => (
+    <View style={styles.audioPlayerCard}>
+      <View style={styles.audioPlayerHeader}>
+        <Text style={styles.audioPlayerTitle}>
+          {icon} {title}
+        </Text>
+        <View style={styles.audioPlayerControls}>
+          <TouchableOpacity style={styles.audioControlButton}>
+            <Text style={styles.audioControlText}>▶️</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.audioControlButton}>
+            <Text style={styles.audioControlText}>📤</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View style={styles.waveformContainer}>
+        {/* You can integrate your actual AudioExtractor component here */}
+        <Components.AudioExtractor extractedAudio={audioData} />
+      </View>
+    </View>
+  );
+
   // --- Render Live Photo Metadata and Components ---
   const renderLivePhotoContent = () => {
     if (!livePhotoResult) return null;
@@ -307,168 +350,228 @@ const VideoScreen = (): ReactElement => {
     const livePhoto = livePhotoResult as LivePhotoResult;
 
     return (
-      <View style={styles.mediaDetailsContainer}>
-        {/* Live Photo Header with Metadata */}
-        <View style={styles.livePhotoMetadataContainer}>
-          <Text style={styles.livePhotoTitle}>📸 Live Photo Details</Text>
-
-          {/* Basic Info */}
-          <View style={styles.metadataSection}>
-            <Text style={styles.metadataLabel}>Local ID:</Text>
-            <Text style={styles.metadataValue}>
-              {livePhoto.localIdentifier || 'N/A'}
-            </Text>
+      <ScrollView
+        style={styles.mediaDetailsContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Live Photo Header */}
+        <View style={styles.headerCard}>
+          <View style={styles.headerContent}>
+            <View style={styles.livePhotoIcon}>
+              <Text style={styles.livePhotoEmoji}>📸</Text>
+            </View>
+            <View style={styles.headerText}>
+              <Text style={styles.livePhotoTitle}>Live Photo</Text>
+              <Text style={styles.livePhotoSubtitle}>
+                {livePhoto.pixelWidth} × {livePhoto.pixelHeight}
+                {livePhoto.duration && ` • ${livePhoto.duration.toFixed(1)}s`}
+              </Text>
+            </View>
           </View>
+        </View>
 
-          <View style={styles.metadataSection}>
-            <Text style={styles.metadataLabel}>Created:</Text>
-            <Text style={styles.metadataValue}>
-              {livePhoto.creationDate
-                ? new Date(livePhoto.creationDate * 1000).toLocaleString()
-                : 'N/A'}
-            </Text>
-          </View>
-
-          <View style={styles.metadataSection}>
-            <Text style={styles.metadataLabel}>Modified:</Text>
-            <Text style={styles.metadataValue}>
-              {livePhoto.modificationDate
-                ? new Date(livePhoto.modificationDate * 1000).toLocaleString()
-                : 'N/A'}
-            </Text>
-          </View>
-
-          <View style={styles.metadataSection}>
-            <Text style={styles.metadataLabel}>Resolution:</Text>
-            <Text style={styles.metadataValue}>
-              {livePhoto.pixelWidth} x {livePhoto.pixelHeight}
-            </Text>
-          </View>
-
-          {livePhoto.duration !== undefined && (
-            <View style={styles.metadataSection}>
-              <Text style={styles.metadataLabel}>Duration:</Text>
-              <Text style={styles.metadataValue}>
-                {livePhoto.duration.toFixed(2)}s
-              </Text>
+        {/* Live Photo Preview Components */}
+        <View style={styles.previewSection}>
+          {/* Still Image Component */}
+          {livePhoto.photo && (
+            <View style={styles.componentCard}>
+              <View style={styles.componentHeader}>
+                <Text style={styles.componentTitle}>📷 Still Image</Text>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Text style={styles.actionButtonText}>Save</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.imageContainer}>
+                <Image
+                  source={{ uri: livePhoto.photo }}
+                  style={styles.previewImage}
+                  resizeMode="cover"
+                />
+              </View>
             </View>
           )}
 
-          {/* MIME Types and Filenames */}
-          {livePhoto.photoMime && (
-            <View style={styles.metadataSection}>
-              <Text style={styles.metadataLabel}>Photo MIME:</Text>
-              <Text style={styles.metadataValue}>{livePhoto.photoMime}</Text>
-            </View>
-          )}
+          {/* Video Component */}
+          {livePhoto.video && (
+            <View style={styles.componentCard}>
+              <View style={styles.componentHeader}>
+                <Text style={styles.componentTitle}>🎥 Live Video</Text>
+                <View style={styles.videoControls}>
+                  <TouchableOpacity style={styles.playButton}>
+                    <Text style={styles.playButtonText}>▶️</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.actionButton}>
+                    <Text style={styles.actionButtonText}>Export</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
 
-          {livePhoto.videoMime && (
-            <View style={styles.metadataSection}>
-              <Text style={styles.metadataLabel}>Video MIME:</Text>
-              <Text style={styles.metadataValue}>{livePhoto.videoMime}</Text>
-            </View>
-          )}
+              <View style={styles.videoContainer}>
+                <Video
+                  source={{ uri: livePhoto.video }}
+                  style={styles.previewVideo}
+                  resizeMode="cover"
+                  repeat
+                  muted={false}
+                  controls={false}
+                />
+                <View style={styles.videoOverlay}>
+                  <Text style={styles.videoBadge}>LIVE</Text>
+                </View>
+              </View>
 
-          {livePhoto.filenamePhoto && (
-            <View style={styles.metadataSection}>
-              <Text style={styles.metadataLabel}>Photo File:</Text>
-              <Text style={styles.metadataValue} numberOfLines={2}>
-                {livePhoto.filenamePhoto}
-              </Text>
-            </View>
-          )}
-
-          {livePhoto.filenameVideo && (
-            <View style={styles.metadataSection}>
-              <Text style={styles.metadataLabel}>Video File:</Text>
-              <Text style={styles.metadataValue} numberOfLines={2}>
-                {livePhoto.filenameVideo}
-              </Text>
-            </View>
-          )}
-
-          {/* Location */}
-          {livePhoto.location?.latitude && livePhoto.location?.longitude && (
-            <View style={styles.metadataSection}>
-              <Text style={styles.metadataLabel}>📍 Location:</Text>
-              <Text style={styles.metadataValue}>
-                {livePhoto.location.latitude.toFixed(4)},{' '}
-                {livePhoto.location.longitude.toFixed(4)}
-              </Text>
-            </View>
-          )}
-
-          {livePhoto.location?.altitude !== undefined && (
-            <View style={styles.metadataSection}>
-              <Text style={styles.metadataLabel}>Altitude:</Text>
-              <Text style={styles.metadataValue}>
-                {livePhoto.location.altitude} m
-              </Text>
+              {/* Audio Extraction Controls */}
+              <View style={styles.audioExtractionSection}>
+                {renderAudioExtractionButtons(
+                  true,
+                  livePhotoExtractedAudio,
+                  livePhotoCleanedAudio,
+                  isExtractingLivePhoto,
+                  isCleaningLivePhoto,
+                  handleExtractLivePhotoAudio,
+                  handleCleanLivePhotoAudio,
+                )}
+              </View>
             </View>
           )}
         </View>
 
-        {/* Live Photo Components Preview */}
-        {livePhoto.photo && (
-          <View style={styles.componentPreview}>
-            <Text style={styles.componentTitle}>📷 Still Image Component</Text>
-            <Image
-              source={{ uri: livePhoto.photo }}
-              style={[previewMediaStyle, { height: 200, marginBottom: 10 }]}
-              resizeMode="cover"
-            />
+        {/* Audio Players Section */}
+        {(livePhotoExtractedAudio || livePhotoCleanedAudio) && (
+          <View style={styles.audioSection}>
+            <Text style={styles.sectionTitle}>🎵 Audio Components</Text>
+
+            {livePhotoExtractedAudio &&
+              renderEnhancedAudioPlayer(
+                'Extracted Audio',
+                livePhotoExtractedAudio,
+                '🎵',
+              )}
+
+            {livePhotoCleanedAudio &&
+              renderEnhancedAudioPlayer(
+                'Cleaned Audio',
+                livePhotoCleanedAudio,
+                '✨',
+              )}
           </View>
         )}
 
-        {livePhoto.video && (
-          <View style={styles.componentPreview}>
-            <Text style={styles.componentTitle}>🎥 Video Component</Text>
-            <Video
-              source={{ uri: livePhoto.video }}
-              style={[previewMediaStyle, { height: 300 }]}
-              resizeMode="cover"
-              repeat
-              muted={false}
-              controls={false}
-            />
+        {/* Metadata Section - Collapsible */}
+        <TouchableOpacity
+          style={styles.metadataHeader}
+          onPress={() => setMetadataExpanded(!metadataExpanded)}
+        >
+          <Text style={styles.sectionTitle}>📊 Details</Text>
+          <Text style={styles.expandIcon}>{metadataExpanded ? '▼' : '▶'}</Text>
+        </TouchableOpacity>
 
-            {/* Audio Extraction for Live Photo Video Component */}
-            {renderAudioExtractionButtons(
-              true, // Always true for Live Photo video component
-              livePhotoExtractedAudio,
-              livePhotoCleanedAudio,
-              isExtractingLivePhoto,
-              isCleaningLivePhoto,
-              handleExtractLivePhotoAudio,
-              handleCleanLivePhotoAudio,
-              { marginTop: 10 },
+        {metadataExpanded && (
+          <View style={styles.metadataCard}>
+            {/* Basic Information Grid */}
+            <View style={styles.metadataGrid}>
+              <MetadataItem
+                label="Created"
+                value={
+                  livePhoto.creationDate
+                    ? new Date(
+                        livePhoto.creationDate * 1000,
+                      ).toLocaleDateString()
+                    : 'Unknown'
+                }
+                icon="📅"
+              />
+
+              <MetadataItem
+                label="Modified"
+                value={
+                  livePhoto.modificationDate
+                    ? new Date(
+                        livePhoto.modificationDate * 1000,
+                      ).toLocaleDateString()
+                    : 'Unknown'
+                }
+                icon="⏰"
+              />
+
+              {livePhoto.photoMime && (
+                <MetadataItem
+                  label="Photo Format"
+                  value={
+                    livePhoto.photoMime.split('/')[1]?.toUpperCase() ||
+                    livePhoto.photoMime.toUpperCase()
+                  }
+                  icon="🖼"
+                />
+              )}
+
+              {livePhoto.videoMime && (
+                <MetadataItem
+                  label="Video Format"
+                  value={
+                    livePhoto.videoMime.split('/')[1]?.toUpperCase() ||
+                    livePhoto.videoMime.toUpperCase()
+                  }
+                  icon="🎬"
+                />
+              )}
+            </View>
+
+            {/* Location Information */}
+            {livePhoto.location?.latitude && livePhoto.location?.longitude && (
+              <View style={styles.locationCard}>
+                <Text style={styles.locationTitle}>📍 Location</Text>
+                <Text style={styles.locationCoords}>
+                  {livePhoto.location.latitude.toFixed(4)},{' '}
+                  {livePhoto.location.longitude.toFixed(4)}
+                </Text>
+                {livePhoto.location?.altitude !== undefined && (
+                  <Text style={styles.locationAltitude}>
+                    Altitude: {Math.round(livePhoto.location.altitude)}m
+                  </Text>
+                )}
+                <TouchableOpacity style={styles.mapButton}>
+                  <Text style={styles.mapButtonText}>View on Map</Text>
+                </TouchableOpacity>
+              </View>
             )}
+
+            {/* File Information */}
+            <View style={styles.fileInfoSection}>
+              <Text style={styles.subsectionTitle}>📁 Files</Text>
+              {livePhoto.filenamePhoto && (
+                <View style={styles.fileItem}>
+                  <Text style={styles.fileName} numberOfLines={1}>
+                    📷 {livePhoto.filenamePhoto}
+                  </Text>
+                </View>
+              )}
+              {livePhoto.filenameVideo && (
+                <View style={styles.fileItem}>
+                  <Text style={styles.fileName} numberOfLines={1}>
+                    🎥 {livePhoto.filenameVideo}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
         )}
 
-        {/* Live Photo Audio Players */}
-        {livePhotoExtractedAudio &&
-          renderAudioPlayer(
-            '🎵 Live Photo Extracted Audio',
-            livePhotoExtractedAudio,
-          )}
-
-        {livePhotoCleanedAudio &&
-          renderAudioPlayer(
-            '✨ Live Photo Cleaned Audio',
-            livePhotoCleanedAudio,
-          )}
-
-        {/* Transcription if available */}
+        {/* Transcription Section */}
         {livePhoto.transcription && (
-          <View style={styles.transcriptionContainer}>
-            <Text style={styles.componentTitle}>📝 Transcription</Text>
-            <Text style={styles.transcriptionText}>
-              {livePhoto.transcription}
-            </Text>
+          <View style={styles.transcriptionCard}>
+            <Text style={styles.sectionTitle}>📝 Transcription</Text>
+            <View style={styles.transcriptionContent}>
+              <Text style={styles.transcriptionText}>
+                {livePhoto.transcription}
+              </Text>
+              <TouchableOpacity style={styles.copyButton}>
+                <Text style={styles.copyButtonText}>Copy</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
-      </View>
+      </ScrollView>
     );
   };
 
