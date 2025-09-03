@@ -95,8 +95,10 @@ const VideoScreen = (): ReactElement => {
   ): Promise<void> => {
     setProcessing(true);
     try {
-      const filePath = path.replace('file://', '');
-      const result = await AudioModule.extractCleanAudio(filePath);
+      const filePath = media.path.replace('file://', '');
+      console.log('🎬 Extracting audio from path:', filePath);
+
+      const result = await AudioModule.extractCleanAudio(filePath); // <-- Native audio extraction happens here
 
       if (!result?.path) {
         return Alert.alert(
