@@ -102,23 +102,49 @@ const AudioExtractor: React.FC<Props> = ({ extractedAudio }) => {
     setIsSaving(true);
     try {
       const path = extractedAudio.path.replace('file://', '');
+
+      // Verify file exists before attempting to save
+      const fileExists = await RNFS.exists(path);
+      if (!fileExists) {
+        Alert.alert(
+          'Error',
+          'Audio file not found. Please re-extract the audio.',
+        );
+        return;
+      }
+
       if (Platform.OS === 'ios') {
         await Share.open({
           url: `file://${path}`,
           type: 'audio/m4a',
           filename: `extracted_audio_${Date.now()}.m4a`,
+          title: 'Share Extracted Audio',
         });
         Alert.alert('Success', 'Audio ready to save or share!');
       } else {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const fileName = `extracted_audio_${timestamp}.m4a`;
         const destinationPath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+
+        // Ensure Downloads directory exists
+        const downloadDirExists = await RNFS.exists(RNFS.DownloadDirectoryPath);
+        if (!downloadDirExists) {
+          await RNFS.mkdir(RNFS.DownloadDirectoryPath);
+        }
+
         await RNFS.copyFile(path, destinationPath);
-        Alert.alert('Success', `Saved in Downloads folder`);
+        Alert.alert(
+          'Success',
+          `Audio saved as ${fileName} in Downloads folder`,
+        );
       }
     } catch (err: any) {
+      console.error('Save audio error:', err);
       if (err?.message !== 'User did not share') {
-        Alert.alert('Error', err.message || 'Failed to save audio');
+        Alert.alert(
+          'Error',
+          err.message || 'Failed to save audio. Please try again.',
+        );
       }
     } finally {
       setIsSaving(false);

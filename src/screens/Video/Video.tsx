@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Video from 'react-native-video';
 import { NativeModules } from 'react-native';
+import RNFS from 'react-native-fs';
 import {
   useRoute,
   useNavigation,
@@ -95,10 +96,11 @@ const VideoScreen = (): ReactElement => {
   ): Promise<void> => {
     setProcessing(true);
     try {
-      const filePath = media.path.replace('file://', '');
+      // Fix: Use the actual path parameter, not media.path
+      const filePath = path.replace('file://', '');
       console.log('🎬 Extracting audio from path:', filePath);
 
-      const result = await AudioModule.extractCleanAudio(filePath); // <-- Native audio extraction happens here
+      const result = await AudioModule.extractCleanAudio(filePath);
 
       if (!result?.path) {
         return Alert.alert(
@@ -107,19 +109,36 @@ const VideoScreen = (): ReactElement => {
         );
       }
 
+      // Fix: Provide proper defaults and get file stats
+      let fileSize = result.size || 0;
+      let audioDuration = result.duration || 0;
+
+      // Try to get file size if not provided by native module
+      if (fileSize === 0) {
+        try {
+          const fileStats = await RNFS.stat(result.path);
+          fileSize = fileStats.size;
+        } catch (error) {
+          console.log('Could not get file stats:', error);
+        }
+      }
+
       setProcessed({
         path: result.path,
-        size: result.size ?? 0,
-        duration: result.duration ?? 0,
-        format: result.format ?? 'm4a',
-        sampleRate: result.sampleRate ?? 44100,
-        processed: result.processed ?? true,
+        size: fileSize,
+        duration: audioDuration,
+        format: result.format || 'm4a',
+        sampleRate: result.sampleRate || 44100,
+        processed: result.processed !== undefined ? result.processed : true,
       });
 
       Alert.alert('Success', 'Audio extracted and cleaned successfully!');
     } catch (err: any) {
       console.error('Audio processing error:', err);
-      Alert.alert('Error', err?.message || 'Failed to process audio');
+      Alert.alert(
+        'Error',
+        err?.message || 'Failed to process audio. Please try again.',
+      );
     } finally {
       setProcessing(false);
     }

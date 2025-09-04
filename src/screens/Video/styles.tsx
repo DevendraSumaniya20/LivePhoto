@@ -590,6 +590,15 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(14),
   },
 
+  processedBadge: {
+    backgroundColor: '#34C759',
+    color: '#fff',
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
+    borderRadius: moderateScale(12),
+    fontSize: moderateScale(12),
+    fontWeight: '700',
+  },
   waveformContainer: {
     padding: moderateScale(16),
   },

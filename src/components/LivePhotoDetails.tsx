@@ -6,8 +6,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  Alert,
+  Platform,
 } from 'react-native';
 import Video from 'react-native-video';
+import RNFS from 'react-native-fs';
+import Share from 'react-native-share';
+import { NativeModules } from 'react-native';
 import Components from '.';
 import Colors from '../constants/color';
 import { moderateScale, scale } from '../constants/responsive';
@@ -20,6 +25,8 @@ import {
   formatDate,
   formatDuration,
 } from '../utils/FormattingData';
+
+const { AudioModule } = NativeModules;
 
 interface ProcessedAudio {
   path: string;
@@ -69,6 +76,9 @@ const LivePhotoDetails: React.FC<LivePhotoDetailsProps> = ({
   const [showMetadata, setShowMetadata] = useState(false);
   const [showTranscription, setShowTranscription] = useState(false);
   const [showClearBtn, setShowClearBtn] = useState(false);
+  const [isDownloadingPhoto, setIsDownloadingPhoto] = useState(false);
+  const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
+  const [isCreatingSilentVideo, setIsCreatingSilentVideo] = useState(false);
 
   if (!livePhotoResult) {
     return (
@@ -84,6 +94,133 @@ const LivePhotoDetails: React.FC<LivePhotoDetailsProps> = ({
       </View>
     );
   }
+
+  const handleDownloadPhoto = async () => {
+    setIsDownloadingPhoto(true);
+    try {
+      const photoPath = livePhotoResult.photo.replace('file://', '');
+
+      if (Platform.OS === 'ios') {
+        await Share.open({
+          url: `file://${photoPath}`,
+          type: livePhotoResult.photoMime || 'image/jpeg',
+          filename:
+            livePhotoResult.filenamePhoto || `live_photo_${Date.now()}.jpg`,
+          title: 'Save Live Photo Image',
+        });
+      } else {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const fileName =
+          livePhotoResult.filenamePhoto || `live_photo_${timestamp}.jpg`;
+        const destinationPath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+
+        const downloadDirExists = await RNFS.exists(RNFS.DownloadDirectoryPath);
+        if (!downloadDirExists) {
+          await RNFS.mkdir(RNFS.DownloadDirectoryPath);
+        }
+
+        await RNFS.copyFile(photoPath, destinationPath);
+        Alert.alert(
+          'Success',
+          `Photo saved as ${fileName} in Downloads folder`,
+        );
+      }
+    } catch (error: any) {
+      if (error?.message !== 'User did not share') {
+        Alert.alert('Error', 'Failed to save photo. Please try again.');
+      }
+    } finally {
+      setIsDownloadingPhoto(false);
+    }
+  };
+
+  const handleDownloadSilentVideo = async () => {
+    setIsCreatingSilentVideo(true);
+    try {
+      const videoPath = livePhotoResult.video.replace('file://', '');
+
+      // Create silent video using native module
+      const result = await AudioModule.createSilentVideo(videoPath);
+
+      if (!result?.path) {
+        Alert.alert('Error', 'Failed to create silent video');
+        return;
+      }
+
+      if (Platform.OS === 'ios') {
+        await Share.open({
+          url: `file://${result.path}`,
+          type: 'video/mp4',
+          filename: `silent_live_video_${Date.now()}.mp4`,
+          title: 'Save Silent Live Video',
+        });
+      } else {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const fileName = `silent_live_video_${timestamp}.mp4`;
+        const destinationPath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+
+        const downloadDirExists = await RNFS.exists(RNFS.DownloadDirectoryPath);
+        if (!downloadDirExists) {
+          await RNFS.mkdir(RNFS.DownloadDirectoryPath);
+        }
+
+        await RNFS.copyFile(result.path, destinationPath);
+        Alert.alert(
+          'Success',
+          `Silent video saved as ${fileName} in Downloads folder`,
+        );
+      }
+    } catch (error: any) {
+      console.error('Silent video creation error:', error);
+      if (error?.message !== 'User did not share') {
+        Alert.alert(
+          'Error',
+          'Failed to create silent video. Please try again.',
+        );
+      }
+    } finally {
+      setIsCreatingSilentVideo(false);
+    }
+  };
+
+  const handleDownloadVideo = async () => {
+    setIsDownloadingVideo(true);
+    try {
+      const videoPath = livePhotoResult.video.replace('file://', '');
+
+      if (Platform.OS === 'ios') {
+        await Share.open({
+          url: `file://${videoPath}`,
+          type: livePhotoResult.videoMime || 'video/mov',
+          filename:
+            livePhotoResult.filenameVideo || `live_video_${Date.now()}.mov`,
+          title: 'Save Live Photo Video',
+        });
+      } else {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const fileName =
+          livePhotoResult.filenameVideo || `live_video_${timestamp}.mov`;
+        const destinationPath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+
+        const downloadDirExists = await RNFS.exists(RNFS.DownloadDirectoryPath);
+        if (!downloadDirExists) {
+          await RNFS.mkdir(RNFS.DownloadDirectoryPath);
+        }
+
+        await RNFS.copyFile(videoPath, destinationPath);
+        Alert.alert(
+          'Success',
+          `Video saved as ${fileName} in Downloads folder`,
+        );
+      }
+    } catch (error: any) {
+      if (error?.message !== 'User did not share') {
+        Alert.alert('Error', 'Failed to save video. Please try again.');
+      }
+    } finally {
+      setIsDownloadingVideo(false);
+    }
+  };
 
   const renderToggleCard = (
     title: string,
@@ -175,6 +312,26 @@ const LivePhotoDetails: React.FC<LivePhotoDetailsProps> = ({
               <Text style={styles.componentBadgeText}>PHOTO</Text>
             </View>
           </View>
+
+          {/* Photo Download Button */}
+          <TouchableOpacity
+            style={[
+              styles.downloadButton,
+              isDownloadingPhoto && styles.downloadButtonDisabled,
+            ]}
+            onPress={handleDownloadPhoto}
+            disabled={isDownloadingPhoto}
+            activeOpacity={0.8}
+          >
+            <Icons.Download
+              height={moderateScale(16)}
+              width={moderateScale(16)}
+              fill={Colors.white}
+            />
+            <Text style={styles.downloadButtonText}>
+              {isDownloadingPhoto ? 'Saving Photo...' : 'Save Photo'}
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -209,6 +366,50 @@ const LivePhotoDetails: React.FC<LivePhotoDetailsProps> = ({
             >
               <Text style={styles.componentBadgeText}>LIVE</Text>
             </View>
+          </View>
+
+          {/* Video Download Options */}
+          <View style={styles.videoDownloadSection}>
+            <TouchableOpacity
+              style={[
+                styles.downloadButton,
+                isDownloadingVideo && styles.downloadButtonDisabled,
+              ]}
+              onPress={handleDownloadVideo}
+              disabled={isDownloadingVideo}
+              activeOpacity={0.8}
+            >
+              <Icons.Download
+                height={moderateScale(16)}
+                width={moderateScale(16)}
+                fill={Colors.white}
+              />
+              <Text style={styles.downloadButtonText}>
+                {isDownloadingVideo ? 'Saving Video...' : 'Save Video'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.downloadButton,
+                styles.silentButton,
+                isCreatingSilentVideo && styles.downloadButtonDisabled,
+              ]}
+              onPress={handleDownloadSilentVideo}
+              disabled={isCreatingSilentVideo}
+              activeOpacity={0.8}
+            >
+              <Icons.Download
+                height={moderateScale(16)}
+                width={moderateScale(16)}
+                fill={Colors.white}
+              />
+              <Text style={styles.downloadButtonText}>
+                {isCreatingSilentVideo
+                  ? 'Creating Silent...'
+                  : 'Save Silent Video'}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {/* Audio Processing Button */}
@@ -407,6 +608,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
+  },
+
+  // Download Buttons
+  downloadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(10),
+    borderRadius: moderateScale(12),
+    marginTop: moderateScale(8),
+    marginHorizontal: moderateScale(4),
+  },
+
+  downloadButtonDisabled: {
+    backgroundColor: Colors.primary + '60',
+  },
+
+  downloadButtonText: {
+    color: Colors.white,
+    fontSize: moderateScale(12),
+    fontWeight: '600',
+    marginLeft: moderateScale(6),
+  },
+
+  silentButton: {
+    backgroundColor: Colors.secondary,
+  },
+
+  videoDownloadSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: moderateScale(8),
   },
 
   audioExtractionSection: {

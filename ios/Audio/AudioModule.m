@@ -19,4 +19,8 @@ RCT_EXTERN_METHOD(transcribeAudio:(NSString *)audioPath
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(createSilentVideo:(NSString *)videoPath
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
+                  
 @end
