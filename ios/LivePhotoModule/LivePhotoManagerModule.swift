@@ -25,6 +25,7 @@ class LivePhotoManager: NSObject, PHPickerViewControllerDelegate {
         self.enableTranscription = false
         presentPicker(resolve: resolve, reject: reject)
     }
+  
 
     // MARK: - Pick Live Photo with transcription
     @objc(pickLivePhotoWithTranscription:withRejecter:)

@@ -216,7 +216,7 @@ const AudioExtractor: React.FC<Props> = ({ extractedAudio }) => {
       ]}
     >
       <LinearGradient
-        colors={['#667eea', '#764ba2', '#f093fb']}
+        colors={['#020024', '#090979', '#00D4FF']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientContainer}
@@ -292,7 +292,7 @@ const AudioExtractor: React.FC<Props> = ({ extractedAudio }) => {
             activeOpacity={0.7}
           >
             <LinearGradient
-              colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)']}
+              colors={['rgba(255,255,255,0.55)', 'rgba(255,255,255,0.5)']}
               style={styles.buttonGradient}
             >
               <Icons.Stop
@@ -309,7 +309,7 @@ const AudioExtractor: React.FC<Props> = ({ extractedAudio }) => {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={['#ff6b6b', '#ee5a24']}
+                colors={['#3F5EFB', '#FC466B']}
                 style={styles.primaryButtonGradient}
               >
                 {isPlaying ? (
@@ -336,8 +336,8 @@ const AudioExtractor: React.FC<Props> = ({ extractedAudio }) => {
             <LinearGradient
               colors={
                 isSaving
-                  ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']
-                  : ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)']
+                  ? ['rgba(255,255,255,0.5)', 'rgba(255,255,255,0.5)']
+                  : ['rgba(255,255,255,0.55)', 'rgba(255,255,255,0.55)']
               }
               style={styles.buttonGradient}
             >
@@ -369,9 +369,9 @@ const AudioExtractor: React.FC<Props> = ({ extractedAudio }) => {
 
 const styles = StyleSheet.create({
   mainContainer: {
-    flex: 1, // let it expand inside parent
-    width: '100%', // ensures full width of screen
-    borderRadius: moderateScale(24),
+    // flex: 1, // let it expand inside parent
+    // width: '100%', // ensures full width of screen
+    borderRadius: moderateScale(14),
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
@@ -380,45 +380,29 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
 
-  gradientContainer: {
-    flex: 1,
-    width: '100%',
-  },
+  gradientContainer: {},
 
   headerSection: {
     alignItems: 'center',
     marginBottom: moderateScale(24),
+    marginTop: moderateScale(16),
   },
-  audioIconContainer: {
-    marginBottom: moderateScale(12),
-  },
-  audioIcon: {
-    width: moderateScale(60),
-    height: moderateScale(60),
-    borderRadius: moderateScale(30),
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#ff6b6b',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 8,
-  },
+
   titleText: {
     color: '#ffffff',
-    fontSize: moderateScale(20),
+    fontSize: moderateScale(16),
     fontWeight: '700',
     marginBottom: moderateScale(8),
   },
   audioInfoContainer: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: moderateScale(12),
-    paddingVertical: moderateScale(6),
+    paddingVertical: moderateScale(4),
     borderRadius: moderateScale(12),
   },
   audioInfoText: {
     color: 'rgba(255,255,255,0.8)',
-    fontSize: moderateScale(11),
+    fontSize: moderateScale(8),
     fontWeight: '500',
   },
   waveformContainer: {
@@ -439,7 +423,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: moderateScale(16),
+    marginBottom: moderateScale(14),
     paddingHorizontal: moderateScale(8),
   },
   timeText: {
@@ -460,6 +444,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     marginBottom: moderateScale(32),
     paddingHorizontal: moderateScale(4),
+    marginHorizontal: moderateScale(8),
   },
   slider: {
     width: '100%',
@@ -491,7 +476,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    marginBottom: moderateScale(20),
+    marginBottom: moderateScale(16),
   },
   primaryButton: {
     shadowColor: '#ff6b6b',
@@ -515,8 +500,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   buttonGradient: {
-    width: moderateScale(56),
-    height: moderateScale(56),
+    width: moderateScale(60),
+    height: moderateScale(60),
     borderRadius: moderateScale(28),
     justifyContent: 'center',
     alignItems: 'center',

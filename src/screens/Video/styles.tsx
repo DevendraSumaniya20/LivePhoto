@@ -68,9 +68,10 @@ const styles = StyleSheet.create({
     marginTop: moderateScale(15),
   },
   audioTitle: {
-    color: Colors.white,
+    color: Colors.info,
     fontSize: moderateScale(14),
     marginBottom: moderateScale(8),
+    fontWeight: '600',
   },
 
   // Live Photo
@@ -545,7 +546,6 @@ const styles = StyleSheet.create({
   },
 
   audioPlayerCard: {
-    backgroundColor: '#fff',
     borderRadius: moderateScale(12),
     marginBottom: moderateScale(12),
     shadowColor: '#000',
@@ -571,6 +571,7 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(16),
     fontWeight: '600',
     color: '#1a1a1a',
+    marginTop: moderateScale(16),
   },
 
   audioPlayerControls: {

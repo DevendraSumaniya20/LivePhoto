@@ -303,7 +303,7 @@ const VideoScreen = (): ReactElement => {
                   handleProcessAudio,
                 )}
                 {processedAudio &&
-                  renderAudioPlayer('🎵 Enhanced Audio', processedAudio)}
+                  renderAudioPlayer('Enhanced Audio', processedAudio)}
               </View>
             )}
           </ScrollView>
