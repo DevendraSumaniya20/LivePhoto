@@ -554,6 +554,8 @@ const styles = StyleSheet.create({
     shadowRadius: moderateScale(8),
     elevation: 3,
     overflow: 'hidden',
+    flex: 1,
+    width: '100%',
   },
 
   audioPlayerHeader: {

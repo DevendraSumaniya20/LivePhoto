@@ -239,22 +239,6 @@ const VideoScreen = (): ReactElement => {
     icon: string,
   ) => (
     <View style={styles.audioPlayerCard}>
-      <View style={styles.audioPlayerHeader}>
-        <Text style={styles.audioPlayerTitle}>
-          {icon} {title}
-          {audioData.processed && (
-            <Text style={styles.processedBadge}> • Enhanced</Text>
-          )}
-        </Text>
-        <View style={styles.audioPlayerControls}>
-          <TouchableOpacity style={styles.audioControlButton}>
-            <Text style={styles.audioControlText}>▶️</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.audioControlButton}>
-            <Text style={styles.audioControlText}>📤</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
       <View style={styles.waveformContainer}>
         <Components.AudioExtractor extractedAudio={audioData} />
       </View>
