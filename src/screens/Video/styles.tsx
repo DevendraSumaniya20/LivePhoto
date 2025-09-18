@@ -19,12 +19,12 @@ const styles = StyleSheet.create({
     marginBottom: moderateScale(20),
   },
   headerTitle: {
-    color: Colors.white,
+    color: Colors.info,
     fontSize: moderateScale(18),
     fontWeight: 'bold',
   },
   headerSubtitle: {
-    color: Colors.gray300,
+    color: Colors.infoDark,
     fontSize: moderateScale(12),
   },
 
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
 
   extractButton: {
     backgroundColor: Colors.primary,
-    paddingVertical: moderateScale(12),
+    paddingVertical: moderateScale(14),
     paddingHorizontal: moderateScale(20),
     borderRadius: moderateScale(10),
     alignItems: 'center',
